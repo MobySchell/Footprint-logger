@@ -40,14 +40,15 @@ function sendToLocal() {
     var dropActivities = document.getElementById("activities").value;
     var inputActivities = document.getElementById("manual-input-field").value;
     var activitiesBlock = document.getElementById("activities");
+    var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
 
     if (dropActivities === "not available" || dropActivities === "") {
-        window.localStorage.setItem("user-input", inputActivities);
+        window.localStorage.setItem(inputActivities, randomNum);
         console.log(window.localStorage);
         activitiesBlock.innerHTML =
             '<option value=""></option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
     } else {
-        window.localStorage.setItem("drop-input", dropActivities);
+        window.localStorage.setItem(dropActivities, randomNum);
         console.log(window.localStorage);
     }
 }
