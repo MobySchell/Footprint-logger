@@ -42,13 +42,18 @@ function sendToLocal() {
     var activitiesBlock = document.getElementById("activities");
     var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
 
-    if (dropActivities === "not available" || dropActivities === "") {
+    if (
+        (dropActivities === "not available" || dropActivities === "") &&
+        inputActivities
+    ) {
         window.localStorage.setItem(inputActivities, randomNum);
         console.log(window.localStorage);
         activitiesBlock.innerHTML =
             '<option value=""></option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
-    } else {
+    } else if (inputActivities === "" && dropActivities !== "") {
         window.localStorage.setItem(dropActivities, randomNum);
         console.log(window.localStorage);
+    } else {
+        alert("Please enter something below");
     }
 }
