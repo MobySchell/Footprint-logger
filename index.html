@@ -1,0 +1,53 @@
+<!--
+TODO: 
+● Select or input daily activities (e.g., car travel, meat consumption, electricity use)
+    - Heading
+    - Dropdown 
+    - Input
+● Automatically assign a CO2 value to each activity
+    - Random Number?
+    - Api?
+● View a running total of emissions
+    - Total from current user?
+    - Total globally
+    - fetch from localStorage
+● Display a visual summary (e.g., a bar or pie chart)
+    - Display in a pie chart, find a youtube video
+● Filter activities by category (e.g., food, transport, energy)
+    - Filter via js
+● Use localStorage to save data between sessions
+    - need to revise again
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Footprint Logger</title>
+  </head>
+  <body>
+    <div class="main-div">
+      <h1>Footprint Logger</h1>
+
+      <div id="dropdown-activities">
+        <label for="activities">Add Daily Activity</label>
+        <select name="activities" id="activities">
+          <option value="volvo">Volvo</option>
+        </select>
+      </div>
+
+      <div id="manual-input">
+        <label for="manual-input">Can't find one? Please enter one here</label>
+        <input
+          type="text"
+          placeholder="Add Daily activity"
+          id="manual-input-field"
+        />
+      </div>
+
+      <button class="add-btn">ADD</button>
+    </div>
+  </body>
+</html>
