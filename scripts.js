@@ -36,12 +36,25 @@ localStorage.setItem("profile", JSON.stringify(object));
 let result = JSON.parse(localStorage.getItem("profile"));console.log(result);
 */
 
+window.addEventListener("load", function () {
+    var totalEmissions = window.localStorage.getItem("totalEmissions");
+    if (totalEmissions === null) {
+        window.localStorage.setItem("totalEmissions", 0);
+    }
+    var totalEmissions = window.localStorage.getItem("totalEmissions");
+    var display = document.getElementById("running-total");
+
+    /* Display Total Emissions */
+    display.innerText = totalEmissions;
+});
+
 function sendToLocal() {
     var dropActivities = document.getElementById("activities").value;
     var inputActivities = document.getElementById("manual-input-field").value;
     var activitiesBlock = document.getElementById("activities");
     var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
     var totalEmissions = window.localStorage.getItem("totalEmissions");
+    var display = document.getElementById("running-total");
 
     if (
         (dropActivities === "not available" || dropActivities === "") &&
@@ -55,13 +68,18 @@ function sendToLocal() {
         // console.log(window.localStorage);
         activitiesBlock.innerHTML =
             '<option value=""></option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
+
+        /* Display Total Emissions */
+        display.innerText = totalEmissions;
     } else if (inputActivities === "" && dropActivities !== "") {
         window.localStorage.setItem(dropActivities, randomNum);
 
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
-        // console.log(window.localStorage);
+
+        /* Display Total Emissions */
+        display.innerText = totalEmissions;
     } else {
         alert("Please enter something below");
     }
