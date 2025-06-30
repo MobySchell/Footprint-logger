@@ -86,3 +86,25 @@ function sendToLocal() {
         alert("Please enter something below");
     }
 }
+
+/* Pie Chart */
+anychart.onDocumentReady(function () {
+    // add the data
+    let data = anychart.data.set([
+        ["Chennai Super Kings", 5],
+        ["Mumbai Indians", 5],
+        ["Kolkatta Knight Riders", 2],
+        ["Deccan Chargers", 1],
+        ["Gujarat Titans", 1],
+        ["Rajasthan Royal", 1],
+        ["Sunrisers Hyderabad", 1],
+    ]);
+    // create a pie chart with the data
+    let chart = anychart.pie(data);
+    // set the chart title
+    chart.title("IPL Winnership Over 16 Seasons");
+    // set container id for the chart
+    chart.visualrep("container");
+    // initiate chart drawing
+    chart.draw();
+});
