@@ -74,13 +74,14 @@ function sendToLocal() {
 }
 
 /* Pie Chart */
-let categories = {};
+let categories = [];
 let excludedKey = "totalEmissions"; // Replace with your actual key
 
 for (let i = 0; i < window.localStorage.length; i++) {
     let key = window.localStorage.key(i);
     if (key !== excludedKey) {
-        categories[key] = Number(window.localStorage.getItem(key));
+        let value = window.localStorage.getItem(key);
+        categories.push([key, Number(value)]);
     }
 }
 
@@ -88,15 +89,7 @@ console.log(categories);
 
 anychart.onDocumentReady(function () {
     // add the data
-    let data = anychart.data.set([
-        ["Chennai Super Kings", 5],
-        ["Mumbai Indians", 5],
-        ["Kolkatta Knight Riders", 2],
-        ["Deccan Chargers", 1],
-        ["Gujarat Titans", 1],
-        ["Rajasthan Royal", 1],
-        ["Sunrisers Hyderabad", 1],
-    ]);
+    let data = anychart.data.set(categories);
 
     // create a pie chart with the data
     let chart = anychart.pie(data);
