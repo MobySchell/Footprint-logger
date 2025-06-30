@@ -45,7 +45,7 @@ window.addEventListener("load", function () {
     var display = document.getElementById("running-total");
 
     /* Display Total Emissions */
-    display.innerText = totalEmissions;
+    display.textContent = totalEmissions;
 });
 
 function sendToLocal() {
@@ -55,6 +55,8 @@ function sendToLocal() {
     var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
+
+    display.textContent = totalEmissions;
 
     if (
         (dropActivities === "not available" || dropActivities === "") &&
@@ -70,7 +72,7 @@ function sendToLocal() {
             '<option value=""></option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
 
         /* Display Total Emissions */
-        display.innerText = totalEmissions;
+        display.textContent = runningTotalEmissions;
     } else if (inputActivities === "" && dropActivities !== "") {
         window.localStorage.setItem(dropActivities, randomNum);
 
@@ -79,7 +81,7 @@ function sendToLocal() {
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
 
         /* Display Total Emissions */
-        display.innerText = totalEmissions;
+        display.textContent = runningTotalEmissions;
     } else {
         alert("Please enter something below");
     }
