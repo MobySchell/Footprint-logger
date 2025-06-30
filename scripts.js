@@ -1,18 +1,3 @@
-/* 
-//to set an object to the local storage
-const object = {
-    firstName: "chibuike",
-    lastName: "princewill",
-    skills: "software development",
-    email: "princewillchime43@gmail.com",
-    phone: `+234${8169543479}`
-};
-localStorage.setItem("profile", JSON.stringify(object));
-
-// Retrieve object
-let result = JSON.parse(localStorage.getItem("profile"));console.log(result);
-*/
-
 window.addEventListener("load", function () {
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     if (totalEmissions === null) {
@@ -25,6 +10,8 @@ window.addEventListener("load", function () {
 
     /* Display Total Emissions */
     display.textContent = totalEmissions;
+
+    updatePieChart();
 });
 
 function sendToLocal() {
@@ -54,7 +41,8 @@ function sendToLocal() {
 
         /* Display Total Emissions */
         display.textContent = runningTotalEmissions;
-        console.log(categories);
+        updatePieChart();
+        window.location.reload();
     } else if (
         (dropActivities !== "select one" ||
             dropActivities !== "not available") &&
@@ -68,26 +56,30 @@ function sendToLocal() {
 
         /* Display Total Emissions */
         display.textContent = runningTotalEmissions;
+        updatePieChart();
+        window.location.reload();
     } else {
         alert("Please enter something below");
     }
 }
 
 /* Pie Chart */
-let categories = [];
-let excludedKey = "totalEmissions"; // Replace with your actual key
-
-for (let i = 0; i < window.localStorage.length; i++) {
-    let key = window.localStorage.key(i);
-    if (key !== excludedKey) {
-        let value = window.localStorage.getItem(key);
-        categories.push([key, Number(value)]);
-    }
-}
-
-console.log(categories);
-
 anychart.onDocumentReady(function () {
+    updatePieChart();
+});
+
+function updatePieChart() {
+    let categories = [];
+    let excludedKey = "totalEmissions";
+
+    for (let i = 0; i < window.localStorage.length; i++) {
+        let key = window.localStorage.key(i);
+        if (key !== excludedKey) {
+            let value = window.localStorage.getItem(key);
+            categories.push([key, Number(value)]);
+        }
+    }
+
     // add the data
     let data = anychart.data.set(categories);
 
@@ -99,4 +91,4 @@ anychart.onDocumentReady(function () {
     chart.container("visualRep");
     // initiate chart drawing
     chart.draw();
-});
+}
