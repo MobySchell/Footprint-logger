@@ -1,27 +1,4 @@
 /* 
-Local Storage:
-window.localStorage.setItem();
-window.localStorage.getItem();
-window.localStorage.removeItem();
-window.localStorage.clear();
-window.localStorage.key();
-
-//adding value as a variable
-let fullName = "chime chibuike princewill";
-window.localStorage.setItem("key", fullName);
-
-//adding value as a string
-window.localStorage.setItem("key", "chime chibuike princewill" );
-
-let data = window.localStorage.getItem("key");console.log(data);
-//chime chibuike princewill
-
-// Remove data
-window.localStorage.removeItem('key')
-
-// Clear Storage
-window.localStorage.clear()
-
 //to set an object to the local storage
 const object = {
     firstName: "chibuike",
@@ -41,6 +18,8 @@ window.addEventListener("load", function () {
     if (totalEmissions === null) {
         window.localStorage.setItem("totalEmissions", 0);
     }
+    /* TODO: Add retreival for object */
+
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
 
@@ -59,7 +38,8 @@ function sendToLocal() {
     display.textContent = totalEmissions;
 
     if (
-        (dropActivities === "not available" || dropActivities === "") &&
+        (dropActivities === "not available" ||
+            dropActivities === "select one") &&
         inputActivities
     ) {
         window.localStorage.setItem(inputActivities, randomNum);
@@ -67,13 +47,19 @@ function sendToLocal() {
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
+
         // console.log(window.localStorage);
         activitiesBlock.innerHTML =
-            '<option value=""></option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
+            '<option value="select one">Select One ...</option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
 
         /* Display Total Emissions */
         display.textContent = runningTotalEmissions;
-    } else if (inputActivities === "" && dropActivities !== "") {
+        console.log(categories);
+    } else if (
+        (dropActivities !== "select one" ||
+            dropActivities !== "not available") &&
+        inputActivities === ""
+    ) {
         window.localStorage.setItem(dropActivities, randomNum);
 
         /* Running Total Emissions */
@@ -88,6 +74,18 @@ function sendToLocal() {
 }
 
 /* Pie Chart */
+let categories = {};
+let excludedKey = "totalEmissions"; // Replace with your actual key
+
+for (let i = 0; i < window.localStorage.length; i++) {
+    let key = window.localStorage.key(i);
+    if (key !== excludedKey) {
+        categories[key] = Number(window.localStorage.getItem(key));
+    }
+}
+
+console.log(categories);
+
 anychart.onDocumentReady(function () {
     // add the data
     let data = anychart.data.set([
@@ -99,12 +97,13 @@ anychart.onDocumentReady(function () {
         ["Rajasthan Royal", 1],
         ["Sunrisers Hyderabad", 1],
     ]);
+
     // create a pie chart with the data
     let chart = anychart.pie(data);
     // set the chart title
-    chart.title("IPL Winnership Over 16 Seasons");
+    chart.title("Current Emissions");
     // set container id for the chart
-    chart.visualrep("container");
+    chart.container("visualRep");
     // initiate chart drawing
     chart.draw();
 });
