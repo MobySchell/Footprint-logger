@@ -1,9 +1,14 @@
+/*
+Filter for categories:
+save filter to local storage and retreive it from local storage
+use in pie chart and maybe display of categories
+*/
+
 window.addEventListener("load", function () {
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     if (totalEmissions === null) {
         window.localStorage.setItem("totalEmissions", 0);
     }
-    /* TODO: Add retreival for object */
 
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
