@@ -1,9 +1,16 @@
 var emissionsData = [];
+let chart;
 
 window.addEventListener("load", function () {
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     if (totalEmissions === null) {
         window.localStorage.setItem("totalEmissions", 0);
+    }
+
+    var filters = window.localStorage.getItem("filters");
+
+    if (filters === null) {
+        window.localStorage.setItem("filters", "none");
     }
 
     var totalEmissions = window.localStorage.getItem("totalEmissions");
@@ -61,32 +68,78 @@ function sendToLocal() {
     }
 }
 
-/* Pie Chart */
 anychart.onDocumentReady(function () {
-    updatePieChart();
+    updatePieChart(); // Call without filter or with 'clear' to show all
 });
 
-function updatePieChart() {
-    let categories = [];
-    let excludedKey = "totalEmissions";
+function updatePieChart(categoryFilter = null) {
+    const excludedKey = "totalEmissions";
+    const rawData = window.localStorage.getItem("emissionData");
 
-    for (let i = 0; i < window.localStorage.length; i++) {
-        let key = window.localStorage.key(i);
-        if (key !== excludedKey) {
-            let value = window.localStorage.getItem(key);
-            categories.push([key, Number(value)]);
+    if (!rawData) {
+        console.error("No emissionData found in localStorage.");
+        return;
+    }
+
+    const parsedData = JSON.parse(rawData);
+    let categories = [];
+
+    // Normalize filter input to lowercase
+    const filter = categoryFilter?.toLowerCase();
+
+    const showAll = !filter || filter === "clear";
+
+    if (!showAll) {
+        const categoryData = parsedData[categoryFilter];
+        if (!categoryData) {
+            console.error(`Category "${categoryFilter}" not found.`);
+            return;
+        }
+
+        for (let activity in categoryData) {
+            if (activity !== excludedKey) {
+                categories.push([activity, Number(categoryData[activity])]);
+            }
+        }
+    } else {
+        for (let category in parsedData) {
+            const categoryData = parsedData[category];
+            for (let activity in categoryData) {
+                if (activity !== excludedKey) {
+                    categories.push([
+                        `${category}: ${activity}`,
+                        Number(categoryData[activity]),
+                    ]);
+                }
+            }
         }
     }
 
-    // add the data
-    let data = anychart.data.set(categories);
+    const data = anychart.data.set(categories);
 
-    // create a pie chart with the data
-    let chart = anychart.pie(data);
-    // set the chart title
-    chart.title("Current Emissions");
-    // set container id for the chart
-    chart.container("visualRep");
-    // initiate chart drawing
-    chart.draw();
+    if (!chart) {
+        chart = anychart.pie(data);
+        chart.title(
+            showAll
+                ? "Emissions for All Categories"
+                : `Emissions for ${categoryFilter}`
+        );
+        chart.container("visualRep");
+        chart.draw();
+    } else {
+        chart.data(data);
+        chart.title(
+            showAll
+                ? "Emissions for All Categories"
+                : `Emissions for ${categoryFilter}`
+        );
+    }
+}
+
+var filter = "";
+
+function filterBy(filters) {
+    filter = filters;
+    window.localStorage.setItem("filters", filter);
+    updatePieChart(filter);
 }
