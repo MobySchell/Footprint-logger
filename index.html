@@ -66,7 +66,25 @@
             <!-- Btn to send to local storage -->
 
             <div id="running-total" class="block"></div>
-            <div id="filters"></div>
+            <div id="filters">
+                <button class="btn active"></button>
+                <button class="btn" onclick="filterBy('Food')">Food</button>
+                <button class="btn" onclick="filterBy('Transport')">
+                    Transport
+                </button>
+                <button class="btn" onclick="filterBy('Energy')">Energy</button>
+                <button class="btn" onclick="filterBy('Waste')">Waste</button>
+                <button class="btn" onclick="filterBy('Consumption')">
+                    Consumption
+                </button>
+                <button class="btn" onclick="filterBy('Housing')">
+                    Housing
+                </button>
+                <button class="btn" onclick="filterBy('Digital')">
+                    Digital
+                </button>
+                <button class="btn" onclick="filterBy('Clear')">Clear</button>
+            </div>
             <div id="visualRep" class="block"></div>
         </div>
     </body>
