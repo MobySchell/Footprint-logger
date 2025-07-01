@@ -1,8 +1,4 @@
-/*
-Filter for categories:
-save filter to local storage and retreive it from local storage
-use in pie chart and maybe display of categories
-*/
+var emissionsData = [];
 
 window.addEventListener("load", function () {
     var totalEmissions = window.localStorage.getItem("totalEmissions");
@@ -13,58 +9,55 @@ window.addEventListener("load", function () {
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
 
-    /* Display Total Emissions */
+    /* Display initial or reloaded Emissions */
     display.textContent = totalEmissions;
-
-    updatePieChart();
 });
 
 function sendToLocal() {
     var dropActivities = document.getElementById("activities").value;
+    var dropCategories = document.getElementById("categories").value;
     var inputActivities = document.getElementById("manual-input-field").value;
-    var activitiesBlock = document.getElementById("activities");
+    //     var activitiesBlock = document.getElementById("activities");
     var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
 
-    display.textContent = totalEmissions;
+    var storedData = localStorage.getItem("emissionData");
+    var emissionsData = storedData ? JSON.parse(storedData) : {};
 
+    if (!emissionsData[dropCategories]) {
+        emissionsData[dropCategories] = {};
+    }
+
+    /* Input Checker */ // Work on resetting inputs and checking whether it's already in the object
     if (
-        (dropActivities === "not available" ||
+        (dropActivities === "notAvailable" ||
             dropActivities === "select one") &&
-        inputActivities
+        inputActivities &&
+        dropCategories
     ) {
-        window.localStorage.setItem(inputActivities, randomNum);
+        emissionsData[dropCategories][inputActivities] = randomNum;
+        localStorage.setItem("emissionData", JSON.stringify(emissionsData));
 
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
-
-        // console.log(window.localStorage);
-        activitiesBlock.innerHTML =
-            '<option value="select one">Select One ...</option><option value="driving">Driving</option><option value="meat consumption">Meat Consumption</option><option value="electricity use">Electricity Use</option><option value="not available">Not Available</option>';
-
-        /* Display Total Emissions */
         display.textContent = runningTotalEmissions;
-        updatePieChart();
-        window.location.reload();
     } else if (
         (dropActivities !== "select one" ||
-            dropActivities !== "not available") &&
-        inputActivities === ""
+            dropActivities !== "notAvailable") &&
+        inputActivities === "" &&
+        dropActivities
     ) {
-        window.localStorage.setItem(dropActivities, randomNum);
+        emissionsData[dropCategories][dropActivities] = randomNum;
+        localStorage.setItem("emissionData", JSON.stringify(emissionsData));
 
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
-
-        /* Display Total Emissions */
         display.textContent = runningTotalEmissions;
-        updatePieChart();
-        window.location.reload();
     } else {
-        alert("Please enter something below");
+        alert("Please make sure to fillout the appropriate fields");
     }
 }
 
