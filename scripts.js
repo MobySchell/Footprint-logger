@@ -50,6 +50,7 @@ function sendToLocal() {
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
         display.textContent = runningTotalEmissions;
+        location.reload();
     } else if (
         (dropActivities !== "select one" ||
             dropActivities !== "notAvailable") &&
@@ -63,6 +64,7 @@ function sendToLocal() {
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
         display.textContent = runningTotalEmissions;
+        location.reload();
     } else {
         alert("Please make sure to fillout the appropriate fields");
     }
