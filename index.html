@@ -5,12 +5,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-core.min.js"></script>
         <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-pie.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Libertinus+Mono&display=swap"
+            rel="stylesheet"
+        />
         <link rel="stylesheet" href="styles.css" />
         <title>Footprint Logger</title>
     </head>
     <body>
         <div class="main-div">
-            <h1>Footprint Logger</h1>
+            <h1 id="heading" class="libertinus-mono-regular">
+                Footprint Logger
+            </h1>
             <!-- User Inputs -->
             <!-- Dropdown with activities options -->
 
@@ -59,7 +67,7 @@
                 />
             </div>
 
-            <button class="add-btn" type="submit" onclick="sendToLocal()">
+            <button class="add-btn btn" type="submit" onclick="sendToLocal()">
                 ADD
             </button>
 
@@ -67,7 +75,6 @@
 
             <div id="running-total" class="block"></div>
             <div id="filters">
-                <button class="btn active"></button>
                 <button class="btn" onclick="filterBy('Food')">Food</button>
                 <button class="btn" onclick="filterBy('Transport')">
                     Transport
