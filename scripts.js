@@ -17,7 +17,7 @@ window.addEventListener("load", function () {
     var display = document.getElementById("running-total");
 
     /* Display initial or reloaded Emissions */
-    display.textContent = totalEmissions;
+    display.textContent = `Total Emissions: ${totalEmissions} CO2e`;
 });
 
 function sendToLocal() {
@@ -49,7 +49,7 @@ function sendToLocal() {
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
-        display.textContent = runningTotalEmissions;
+        display.textContent = `Total Emissions: ${runningTotalEmissions} CO2e`;
         location.reload();
     } else if (
         (dropActivities !== "select one" ||
@@ -63,7 +63,7 @@ function sendToLocal() {
         /* Running Total Emissions */
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
-        display.textContent = runningTotalEmissions;
+        display.textContent = `Total Emissions: ${runningTotalEmissions} CO2e`;
         location.reload();
     } else {
         alert("Please make sure to fillout the appropriate fields");
