@@ -22,6 +22,15 @@
     </container>
 */
 
+#honk-Heading {
+    font-size: 48px;
+    font-family: "Honk", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "MORF" 17, "SHLN" 58.2;
+}
+
 .container {
     display: grid;
     grid-template-columns: 50% 50%;
@@ -70,15 +79,27 @@
                 background-color: white;
                 box-shadow: 5px 5px black;
                 border: solid;
+                border-radius: 10px;
+            }
+
+            #add-btn:active {
+                box-shadow: 1px 1px black;
+                transform: translateY(4px) translateX(4px);
             }
 
             .btn {
-                margin: px 5px;
+                margin: 5px 5px;
                 height: 40px;
                 width: 100px;
                 background-color: white;
                 box-shadow: 5px 5px black;
                 border: solid;
+                border-radius: 10px;
+            }
+
+            .btn:active {
+                box-shadow: 1px 1px black;
+                transform: translateY(4px) translateX(4px);
             }
         }
     }
