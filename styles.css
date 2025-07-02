@@ -12,6 +12,28 @@ body,
     padding: 0;
 }
 
+body {
+    height: 100vh;
+    width: 100%;
+}
+
+.container {
+    display: flex;
+    background-color: rgb(124, 124, 124);
+    min-width: 100%;
+    height: 100%;
+}
+
+.left {
+    justify-content: start;
+    width: 50%;
+}
+.right {
+    justify-content: end;
+    width: 50%;
+    height: 100%;
+}
+
 .libertinus-mono-regular {
     font-family: "Libertinus Mono", monospace;
     font-weight: 400;
@@ -22,27 +44,8 @@ body,
     font-size: 64px;
 }
 
-body {
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    width: 100%;
-}
-
-.main-div {
-    margin-top: 100px;
-    background-color: rgb(124, 124, 124);
-    min-width: 70%;
-    max-width: 80%;
-    height: 80%;
-}
-
 #visualRep {
     background-color: aqua;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
 }
 
 .btn {
