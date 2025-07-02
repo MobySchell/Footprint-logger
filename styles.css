@@ -27,13 +27,18 @@ body {
 .left {
     justify-content: start;
     width: 50%;
+    margin-top: 50px;
+    margin-left: 80px;
 }
+
 .right {
     justify-content: end;
     width: 50%;
     height: 100%;
 }
 
+.card {
+}
 .libertinus-mono-regular {
     font-family: "Libertinus Mono", monospace;
     font-weight: 400;
@@ -42,6 +47,28 @@ body {
 
 #heading {
     font-size: 64px;
+}
+
+.dropdownContainer {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    width: 50%;
+}
+
+.dropdown label {
+    justify-self: start;
+    width: 100px;
+}
+
+.dropdown {
+    width: 150px;
+    justify-self: end;
+}
+
+#manual-input {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    width: 50%;
 }
 
 #visualRep {
