@@ -15,84 +15,101 @@
         <title>Footprint Logger</title>
     </head>
     <body>
-        <div class="main-div">
-            <h1 id="heading" class="libertinus-mono-regular">
-                Footprint Logger
-            </h1>
-            <!-- User Inputs -->
-            <!-- Dropdown with activities options -->
+        <div class="container">
+            <div class="left">
+                <h1 id="heading" class="libertinus-mono-regular">
+                    Footprint Logger
+                </h1>
 
-            <div id="dropdown-activities">
-                <label for="activities">Add Daily Activity</label>
-                <select name="activities" id="activities">
-                    <!-- If Edit css re-add to js file -->
-                    <option value="select one">Select One ...</option>
-                    <option value="eating">eating</option>
-                    <option value="cooking">cooking</option>
-                    <option value="driving">driving</option>
-                    <option value="publicTransport">public transport</option>
-                    <option value="walking">walking</option>
-                    <option value="cycling">cycling</option>
-                    <option value="electricity">electricity</option>
-                    <option value="heating">heating</option>
-                    <option value="waterHeating">water heating</option>
-                    <option value="streaming">streaming</option>
-                    <option value="notAvailable">not available</option>
-                </select>
-            </div>
+                <!-- Dropdown with activities options -->
+                <div id="dropdown-activities">
+                    <label for="activities">Add Daily Activity</label>
+                    <select name="activities" id="activities">
+                        <option value="select one">Select One ...</option>
+                        <option value="eating">eating</option>
+                        <option value="cooking">cooking</option>
+                        <option value="driving">driving</option>
+                        <option value="publicTransport">
+                            public transport
+                        </option>
+                        <option value="walking">walking</option>
+                        <option value="cycling">cycling</option>
+                        <option value="electricity">electricity</option>
+                        <option value="heating">heating</option>
+                        <option value="waterHeating">water heating</option>
+                        <option value="streaming">streaming</option>
+                        <option value="notAvailable">not available</option>
+                    </select>
+                </div>
 
-            <div id="dropdown-categories">
-                <label for="categories">Pick a category</label>
-                <select name="categories" id="categories">
-                    <option value="select one">Select One ...</option>
-                    <option value="Food">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Energy">Energy</option>
-                    <option value="Waste">Waste</option>
-                    <option value="Consumption">Consumption</option>
-                    <option value="Housing">Housing</option>
-                    <option value="Digital">Digital</option>
-                </select>
-            </div>
+                <div id="dropdown-categories">
+                    <label for="categories">Pick a category</label>
+                    <select name="categories" id="categories">
+                        <option value="select one">Select One ...</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Waste">Waste</option>
+                        <option value="Consumption">Consumption</option>
+                        <option value="Housing">Housing</option>
+                        <option value="Digital">Digital</option>
+                    </select>
+                </div>
 
-            <!-- Manual User Input -->
-            <div id="manual-input">
-                <label for="manual-input"
-                    >Can't find one? Please enter one here</label
+                <!-- Manual User Input -->
+                <div id="manual-input">
+                    <label for="manual-input"
+                        >Can't find one? Please enter one here</label
+                    >
+                    <input
+                        type="text"
+                        placeholder="Add Daily activity"
+                        id="manual-input-field"
+                    />
+                </div>
+
+                <button
+                    class="add-btn btn"
+                    type="submit"
+                    onclick="sendToLocal()"
                 >
-                <input
-                    type="text"
-                    placeholder="Add Daily activity"
-                    id="manual-input-field"
-                />
+                    ADD
+                </button>
+
+                <!-- Running Total Emissions Target -->
+                <div id="running-total" class="block"></div>
+
+                <!-- Filters -->
+                <div id="filters">
+                    <button class="btn" onclick="filterBy('Food')">Food</button>
+                    <button class="btn" onclick="filterBy('Transport')">
+                        Transport
+                    </button>
+                    <button class="btn" onclick="filterBy('Energy')">
+                        Energy
+                    </button>
+                    <button class="btn" onclick="filterBy('Waste')">
+                        Waste
+                    </button>
+                    <button class="btn" onclick="filterBy('Consumption')">
+                        Consumption
+                    </button>
+                    <button class="btn" onclick="filterBy('Housing')">
+                        Housing
+                    </button>
+                    <button class="btn" onclick="filterBy('Digital')">
+                        Digital
+                    </button>
+                    <button class="btn" onclick="filterBy('Clear')">
+                        Clear
+                    </button>
+                </div>
             </div>
 
-            <button class="add-btn btn" type="submit" onclick="sendToLocal()">
-                ADD
-            </button>
-
-            <!-- Btn to send to local storage -->
-
-            <div id="running-total" class="block"></div>
-            <div id="filters">
-                <button class="btn" onclick="filterBy('Food')">Food</button>
-                <button class="btn" onclick="filterBy('Transport')">
-                    Transport
-                </button>
-                <button class="btn" onclick="filterBy('Energy')">Energy</button>
-                <button class="btn" onclick="filterBy('Waste')">Waste</button>
-                <button class="btn" onclick="filterBy('Consumption')">
-                    Consumption
-                </button>
-                <button class="btn" onclick="filterBy('Housing')">
-                    Housing
-                </button>
-                <button class="btn" onclick="filterBy('Digital')">
-                    Digital
-                </button>
-                <button class="btn" onclick="filterBy('Clear')">Clear</button>
+            <!-- Pie Chart Target -->
+            <div class="right">
+                <div id="visualRep" class="block"></div>
             </div>
-            <div id="visualRep" class="block"></div>
         </div>
     </body>
     <script src="scripts.js"></script>
