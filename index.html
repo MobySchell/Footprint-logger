@@ -5,8 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-core.min.js"></script>
         <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-pie.min.js"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
             href="https://fonts.googleapis.com/css2?family=Libertinus+Mono&display=swap"
             rel="stylesheet"
@@ -16,21 +14,23 @@
     </head>
     <body>
         <div class="container">
-            <div class="left">
+            <div class="headingAndInputArea">
                 <h1 id="heading" class="libertinus-mono-regular">
                     Footprint Logger
                 </h1>
 
-                <div class="card">
+                <div class="cardArea">
                     <!-- Dropdown with activities options -->
-                    <div id="dropdown-activities" class="dropdownContainer">
-                        <label for="activities">Add Daily Activity</label>
+                    <div id="dropdown-activities" class="inputContainer">
+                        <label for="activities" class="labels"
+                            >Add Daily Activity</label
+                        >
                         <select
                             name="activities"
                             id="activities"
-                            class="dropdown"
+                            class="infoInputs"
                         >
-                            <option value="select one">Select One ...</option>
+                            <option value="select one">Select Acttivity</option>
                             <option value="eating">eating</option>
                             <option value="cooking">cooking</option>
                             <option value="driving">driving</option>
@@ -48,26 +48,29 @@
                     </div>
 
                     <!-- Manual User Input -->
-                    <div id="manual-input">
-                        <label for="manual-input"
+                    <div id="manual-input" class="inputContainer">
+                        <label for="manual-input" class="labels"
                             >Can't find one? Please enter one here</label
                         >
                         <input
                             type="text"
                             placeholder="Add Daily activity"
                             id="manual-input-field"
+                            class="infoInputs"
                         />
                     </div>
 
                     <!-- Categories for activities to be saved to -->
-                    <div id="dropdown-categories" class="dropdownContainer">
-                        <label for="categories">Pick a category</label>
+                    <div id="dropdown-categories" class="inputContainer">
+                        <label for="categories" class="labels"
+                            >Pick a category</label
+                        >
                         <select
                             name="categories"
                             id="categories"
-                            class="dropdown"
+                            class="infoInputs"
                         >
-                            <option value="select one">Select One ...</option>
+                            <option value="select one">Select Category</option>
                             <option value="Food">Food</option>
                             <option value="Transport">Transport</option>
                             <option value="Energy">Energy</option>
@@ -78,11 +81,7 @@
                         </select>
                     </div>
 
-                    <button
-                        class="add-btn btn"
-                        type="submit"
-                        onclick="sendToLocal()"
-                    >
+                    <button id="add-btn" type="submit" onclick="sendToLocal()">
                         ADD
                     </button>
 
@@ -91,37 +90,43 @@
 
                     <!-- Filters -->
                     <div id="filters">
-                        <button class="btn" onclick="filterBy('Food')">
-                            Food
-                        </button>
-                        <button class="btn" onclick="filterBy('Transport')">
-                            Transport
-                        </button>
-                        <button class="btn" onclick="filterBy('Energy')">
-                            Energy
-                        </button>
-                        <button class="btn" onclick="filterBy('Waste')">
-                            Waste
-                        </button>
-                        <button class="btn" onclick="filterBy('Consumption')">
-                            Consumption
-                        </button>
-                        <button class="btn" onclick="filterBy('Housing')">
-                            Housing
-                        </button>
-                        <button class="btn" onclick="filterBy('Digital')">
-                            Digital
-                        </button>
-                        <button class="btn" onclick="filterBy('Clear')">
-                            Clear
-                        </button>
+                        <h3>Filters</h3>
+                        <div id="filterOptions">
+                            <button class="btn" onclick="filterBy('Food')">
+                                Food
+                            </button>
+                            <button class="btn" onclick="filterBy('Transport')">
+                                Transport
+                            </button>
+                            <button class="btn" onclick="filterBy('Energy')">
+                                Energy
+                            </button>
+                            <button class="btn" onclick="filterBy('Waste')">
+                                Waste
+                            </button>
+                            <button
+                                class="btn"
+                                onclick="filterBy('Consumption')"
+                            >
+                                Consumption
+                            </button>
+                            <button class="btn" onclick="filterBy('Housing')">
+                                Housing
+                            </button>
+                            <button class="btn" onclick="filterBy('Digital')">
+                                Digital
+                            </button>
+                            <button class="btn" onclick="filterBy('Clear')">
+                                Clear
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Pie Chart Target -->
-            <div class="right">
-                <div id="visualRep" class="block"></div>
+            <div class="graphArea">
+                <div id="visualRep" class="graph"></div>
             </div>
         </div>
     </body>
