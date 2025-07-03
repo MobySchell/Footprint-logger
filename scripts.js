@@ -20,9 +20,9 @@ window.addEventListener("load", function () {
 });
 
 function sendToLocal() {
-    var dropActivities = document.getElementById("activities").value;
-    var dropCategories = document.getElementById("categories").value;
-    var inputActivities = document.getElementById("manual-input-field").value;
+    var dropActivities = document.getElementById("activities");
+    var dropCategories = document.getElementById("categories");
+    var inputActivities = document.getElementById("manual-input-field");
     var randomNum = Math.floor(Math.random() * (1000 - 100) + 100);
     var totalEmissions = window.localStorage.getItem("totalEmissions");
     var display = document.getElementById("running-total");
@@ -30,40 +30,48 @@ function sendToLocal() {
     var storedData = localStorage.getItem("emissionData");
     var emissionsData = storedData ? JSON.parse(storedData) : {};
 
-    if (!emissionsData[dropCategories]) {
-        emissionsData[dropCategories] = {};
+    if (!emissionsData[dropCategories.value]) {
+        emissionsData[dropCategories.value] = {};
     }
 
-    /* Input Checker */ // Work on resetting inputs and checking whether it's already in the object
+    /* Input Checker */
     if (
-        (dropActivities !== "" || dropActivities !== "") &&
-        inputActivities !== "" &&
-        dropCategories !== ""
+        (dropActivities.value !== "" || dropActivities.value !== "") &&
+        inputActivities.value === "" &&
+        dropCategories.value !== ""
     ) {
-        emissionsData[dropCategories][inputActivities] = randomNum;
+        emissionsData[dropCategories.value][dropActivities.value] = randomNum;
         localStorage.setItem("emissionData", JSON.stringify(emissionsData));
 
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
         display.textContent = `Total Emissions: ${runningTotalEmissions} CO2e`;
+        dropActivities.innerHTML =
+            '<option value="">Select Activity</option><option value="eating">eating</option><option value="cooking">cooking</option><option value="driving">driving</option><option value="publicTransport">public transport</option><option value="walking">walking</option><option value="cycling">cycling</option><option value="electricity">electricity</option><option value="heating">heating</option><option value="waterHeating">water heating</option><option value="streaming">streaming</option><option value="">Not available</option>';
+        dropCategories.innerHTML =
+            '<option value="">Select Category</option><option value="Food">Food</option><option value="Transport">Transport</option><option value="Energy">Energy</option><option value="Waste">Waste</option><option value="Consumption">Consumption</option><option value="Housing">Housing</option><option value="Digital">Digital</option>';
         location.reload();
     } else if (
-        (dropActivities !== "" || dropActivities !== "") &&
-        inputActivities === "" &&
-        dropActivities
+        (dropActivities.value === "" || dropActivities.value === "") &&
+        inputActivities.value !== "" &&
+        dropCategories.value !== ""
     ) {
-        emissionsData[dropCategories][dropActivities] = randomNum;
+        emissionsData[dropCategories.value][inputActivities.value] = randomNum;
         localStorage.setItem("emissionData", JSON.stringify(emissionsData));
 
         var runningTotalEmissions = Number(totalEmissions) + randomNum;
         window.localStorage.setItem("totalEmissions", runningTotalEmissions);
         display.textContent = `Total Emissions: ${runningTotalEmissions} CO2e`;
-        location.reload();
+        dropActivities.innerHTML =
+            '<option value="">Select Activity</option><option value="eating">eating</option><option value="cooking">cooking</option><option value="driving">driving</option><option value="publicTransport">public transport</option><option value="walking">walking</option><option value="cycling">cycling</option><option value="electricity">electricity</option><option value="heating">heating</option><option value="waterHeating">water heating</option><option value="streaming">streaming</option><option value="">Not available</option>';
+        dropCategories.innerHTML =
+            '<option value="">Select Category</option><option value="Food">Food</option><option value="Transport">Transport</option><option value="Energy">Energy</option><option value="Waste">Waste</option><option value="Consumption">Consumption</option><option value="Housing">Housing</option><option value="Digital">Digital</option>';
     } else {
         alert("Please make sure to fillout the appropriate fields");
     }
 }
 
+/* Pie Chart */
 anychart.onDocumentReady(function () {
     updatePieChart();
 });
