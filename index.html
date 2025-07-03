@@ -11,6 +11,13 @@
             href="https://fonts.googleapis.com/css2?family=Honk:MORF,SHLN@17,58.2&family=Libertinus+Mono&display=swap"
             rel="stylesheet"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
         <link rel="stylesheet" href="styles.css" />
         <title>Footprint Logger</title>
     </head>
@@ -30,7 +37,7 @@
                             id="activities"
                             class="infoInputs"
                         >
-                            <option value="select one">Select Acttivity</option>
+                            <option value="">Select Acttivity</option>
                             <option value="eating">eating</option>
                             <option value="cooking">cooking</option>
                             <option value="driving">driving</option>
@@ -43,7 +50,7 @@
                             <option value="heating">heating</option>
                             <option value="waterHeating">water heating</option>
                             <option value="streaming">streaming</option>
-                            <option value="notAvailable">not available</option>
+                            <option value="">Not available</option>
                         </select>
                     </div>
 
@@ -70,7 +77,7 @@
                             id="categories"
                             class="infoInputs"
                         >
-                            <option value="select one">Select Category</option>
+                            <option value="">Select Category</option>
                             <option value="Food">Food</option>
                             <option value="Transport">Transport</option>
                             <option value="Energy">Energy</option>
@@ -117,7 +124,7 @@
                                 Digital
                             </button>
                             <button class="btn" onclick="filterBy('Clear')">
-                                Clear
+                                <i class="fa-solid fa-trash"></i> Clear
                             </button>
                         </div>
                     </div>
