@@ -1,53 +1,141 @@
-<!--
-TODO: 
-● Select or input daily activities (e.g., car travel, meat consumption, electricity use)
-    - Heading
-    - Dropdown 
-    - Input
-● Automatically assign a CO2 value to each activity
-    - Random Number?
-    - Api?
-● View a running total of emissions
-    - Total from current user?
-    - Total globally
-    - fetch from localStorage
-● Display a visual summary (e.g., a bar or pie chart)
-    - Display in a pie chart, find a youtube video
-● Filter activities by category (e.g., food, transport, energy)
-    - Filter via js
-● Use localStorage to save data between sessions
-    - need to revise again
--->
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="styles.css" />
-    <title>Footprint Logger</title>
-  </head>
-  <body>
-    <div class="main-div">
-      <h1>Footprint Logger</h1>
-
-      <div id="dropdown-activities">
-        <label for="activities">Add Daily Activity</label>
-        <select name="activities" id="activities">
-          <option value="volvo">Volvo</option>
-        </select>
-      </div>
-
-      <div id="manual-input">
-        <label for="manual-input">Can't find one? Please enter one here</label>
-        <input
-          type="text"
-          placeholder="Add Daily activity"
-          id="manual-input-field"
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-core.min.js"></script>
+        <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-pie.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Honk:MORF,SHLN@17,58.2&family=Libertinus+Mono&display=swap"
+            rel="stylesheet"
         />
-      </div>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <link rel="stylesheet" href="styles.css" />
+        <title>Footprint Logger</title>
+    </head>
+    <body>
+        <div class="container">
+            <div class="headingAndInputArea">
+                <h1 id="honk-Heading">Footprint Logger</h1>
 
-      <button class="add-btn">ADD</button>
-    </div>
-  </body>
+                <div class="cardArea">
+                    <!-- Dropdown with activities options -->
+                    <div id="dropdown-activities" class="inputContainer">
+                        <label for="activities" class="labels"
+                            >Add Daily Activity</label
+                        >
+                        <select
+                            name="activities"
+                            id="activities"
+                            class="infoInputs"
+                        >
+                            <option value="">Select Activity</option>
+                            <option value="eating">eating</option>
+                            <option value="cooking">cooking</option>
+                            <option value="driving">driving</option>
+                            <option value="publicTransport">
+                                public transport
+                            </option>
+                            <option value="walking">walking</option>
+                            <option value="cycling">cycling</option>
+                            <option value="electricity">electricity</option>
+                            <option value="heating">heating</option>
+                            <option value="waterHeating">water heating</option>
+                            <option value="streaming">streaming</option>
+                            <option value="">Not available</option>
+                        </select>
+                    </div>
+
+                    <!-- Manual User Input -->
+                    <div id="manual-input" class="inputContainer">
+                        <label for="manual-input" class="labels"
+                            >Can't find one? Please enter one here</label
+                        >
+                        <input
+                            type="text"
+                            placeholder="Add Daily activity"
+                            id="manual-input-field"
+                            class="infoInputs"
+                        />
+                    </div>
+
+                    <!-- Categories for activities to be saved to -->
+                    <div id="dropdown-categories" class="inputContainer">
+                        <label for="categories" class="labels"
+                            >Pick a category</label
+                        >
+                        <select
+                            name="categories"
+                            id="categories"
+                            class="infoInputs"
+                        >
+                            <option value="">Select Category</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Energy">Energy</option>
+                            <option value="Waste">Waste</option>
+                            <option value="Consumption">Consumption</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Digital">Digital</option>
+                        </select>
+                    </div>
+
+                    <button id="add-btn" type="submit" onclick="sendToLocal()">
+                        ADD
+                    </button>
+
+                    <!-- Running Total Emissions Target -->
+                    <div id="running-total" class="block"></div>
+
+                    <!-- Filters -->
+                    <div id="filters">
+                        <h3>Filters</h3>
+                        <div id="filterOptions">
+                            <button class="btn" onclick="filterBy('Food')">
+                                Food
+                            </button>
+                            <button class="btn" onclick="filterBy('Transport')">
+                                Transport
+                            </button>
+                            <button class="btn" onclick="filterBy('Energy')">
+                                Energy
+                            </button>
+                            <button class="btn" onclick="filterBy('Waste')">
+                                Waste
+                            </button>
+                            <button
+                                class="btn"
+                                onclick="filterBy('Consumption')"
+                            >
+                                Consumption
+                            </button>
+                            <button class="btn" onclick="filterBy('Housing')">
+                                Housing
+                            </button>
+                            <button class="btn" onclick="filterBy('Digital')">
+                                Digital
+                            </button>
+                            <button class="btn" onclick="filterBy('Clear')">
+                                <i class="fa-solid fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie Chart Target -->
+            <div class="graphArea">
+                <div id="visualRep" class="graph"></div>
+            </div>
+        </div>
+    </body>
+    <script src="scripts.js"></script>
 </html>

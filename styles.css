@@ -1,19 +1,150 @@
 * {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
-body {
-  display: flex;
-  justify-content: center;
-  height: 100vh;
-  width: 100%;
+/*
+    <container>
+        <headingAndInputsArea>
+            <cardArea>
+                <Heading>
+                <input>
+                <input>
+                <input>
+                <button>
+                Total emissions
+            </cardArea>
+            Graph filters
+        </headingAndInputsArea>
+        <graphArea>
+            <graph>
+        </graphArea>
+    </container>
+*/
+
+#honk-Heading {
+    font-size: 48px;
+    font-family: "Honk", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "MORF" 17, "SHLN" 58.2;
 }
 
-.main-div {
-  margin-top: 100px;
-  background-color: rgb(124, 124, 124);
-  min-width: 70%;
-  max-width: 80%;
-  height: 80%;
+.container {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    width: 100%;
+    height: 100vh;
+
+    .headingAndInputArea {
+        width: 80%;
+        height: 80%;
+        justify-self: center;
+        align-self: center;
+
+        .cardArea {
+            display: grid;
+            grid-template-rows: 6;
+            row-gap: 20px;
+            margin-top: 15px;
+            padding: 30px;
+            box-shadow: 5px 5px black;
+            border: solid;
+            font-size: 20px;
+
+            label {
+                align-self: center;
+            }
+
+            .inputContainer {
+                display: grid;
+                grid-template-columns: 50% 50%;
+
+                .infoInputs {
+                    justify-self: end;
+                    height: 35px;
+                    padding-left: 5px;
+                    width: 50%;
+                    background-color: white;
+                    border-radius: 10px;
+                    box-shadow: 5px 5px black;
+                    border: solid;
+                }
+            }
+
+            #add-btn {
+                height: 40px;
+                width: 100px;
+                background-color: white;
+                box-shadow: 5px 5px black;
+                border: solid;
+                border-radius: 10px;
+            }
+
+            #add-btn:active {
+                box-shadow: 1px 1px black;
+                transform: translateY(4px) translateX(4px);
+            }
+
+            .btn {
+                margin: 5px 5px;
+                height: 40px;
+                width: 100px;
+                background-color: white;
+                box-shadow: 5px 5px black;
+                border: solid;
+                border-radius: 10px;
+            }
+
+            .btn:active {
+                box-shadow: 1px 1px black;
+                transform: translateY(4px) translateX(4px);
+            }
+        }
+    }
+
+    .graph {
+        width: 100%;
+        height: 100%;
+        justify-self: center;
+        align-self: center;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .container {
+        display: grid;
+        grid-template-columns: 100%;
+        width: 100%;
+        height: 100%;
+
+        .headingAndInputArea {
+            width: 90%;
+            height: 90%;
+            margin-top: 75px;
+            margin-bottom: 30px;
+
+            .cardArea {
+                .inputContainer {
+                    grid-template-columns: 50% 50%;
+                    .infoInputs {
+                        justify-self: end;
+                        height: 50px;
+                        padding-left: 5px;
+                        width: 75%;
+                        background-color: white;
+                        border-radius: 10px;
+                        box-shadow: 5px 5px black;
+                        border: solid;
+                    }
+                }
+            }
+        }
+
+        .graph {
+            width: 100%;
+            height: 100vh;
+        }
+    }
 }
