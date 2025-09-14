@@ -1,29 +1,57 @@
 import "./App.css";
-import FootprintLogger from "./components/footprintLogger";
 import { Routes, Route } from "react-router";
 import Welcome from "./components/Welcome";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import NavBar from "./components/NavBar";
+import Dashboard from "./components/Dashboard";
+import Track from "./components/Track";
+import Leaderboard from "./components/Leaderboard";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-	return (
-		<>
-			<Routes>
-				<Route path="/" element={<Welcome />} />
-				{/* 
-					TODO: 
-					Create Pages for 
-						- Login
-						- Register
-						- Leaderboard
-				*/}
-				<Route path="/register" element={<Register />} />
-				<Route path="/login" element={<Login />} />
-				<Route path="/footprint" element={<FootprintLogger />} />
-			</Routes>
-		</>
-	);
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Welcome />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/track"
+          element={
+            <ProtectedRoute>
+              <Track />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute>
+              <Leaderboard />
+            </ProtectedRoute>
+          }
+        />
+        {/* Legacy route redirect */}
+        <Route
+          path="/footprint"
+          element={
+            <ProtectedRoute>
+              <Track />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AuthProvider>
+  );
 }
 
 export default App;

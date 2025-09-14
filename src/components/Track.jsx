@@ -36,7 +36,7 @@ const CATEGORY_EMISSIONS = {
   Digital: 0.8,
 };
 
-export default function FootprintLogger() {
+export default function Track() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedActivity, setSelectedActivity] = useState("");
   const [customActivity, setCustomActivity] = useState("");
@@ -231,7 +231,9 @@ export default function FootprintLogger() {
       <NavBar />
       <div className="container mx-auto px-4">
         <div className="headingAndInputArea mt-[120px]">
-          <div className="text-4xl italic font-semibold">Footprint Logger</div>
+          <div className="text-4xl italic font-semibold">
+            Track Your Footprint
+          </div>
 
           <div className="cardArea grid outline-solid rounded-2xl px-[50px] py-[30px] mt-[50px] gap-5">
             {/* Categories */}
@@ -263,7 +265,7 @@ export default function FootprintLogger() {
               </select>
             </div>
 
-            {/* Activities1 */}
+            {/* Activities */}
             <div
               id="dropdown-activities"
               className="inputContainer grid grid-rows-2"
@@ -278,8 +280,15 @@ export default function FootprintLogger() {
                 name="activities"
                 id="activities"
                 value={selectedActivity}
-                onChange={(e) => setSelectedActivity(e.target.value)}
+                onChange={(e) => {
+                  setSelectedActivity(e.target.value);
+                  // Clear custom input when dropdown is used
+                  if (e.target.value) {
+                    setCustomActivity("");
+                  }
+                }}
                 className="infoInputs outline-1 px-5 py-2 rounded-xl border"
+                disabled={customActivity !== ""}
               >
                 <option value="">Select Activity</option>
                 <option value="eating">eating</option>
@@ -293,6 +302,11 @@ export default function FootprintLogger() {
                 <option value="waterHeating">water heating</option>
                 <option value="streaming">streaming</option>
               </select>
+              {customActivity && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Clear custom input to use dropdown
+                </p>
+              )}
             </div>
 
             {/* User input */}
@@ -308,10 +322,38 @@ export default function FootprintLogger() {
                 placeholder="Add Daily activity"
                 id="manual-input-field"
                 value={customActivity}
-                onChange={(e) => setCustomActivity(e.target.value)}
+                onChange={(e) => {
+                  setCustomActivity(e.target.value);
+                  // Clear dropdown when custom input is used
+                  if (e.target.value) {
+                    setSelectedActivity("");
+                  }
+                }}
                 className="infoInputs outline-1 px-5 py-2 rounded-xl border"
+                disabled={selectedActivity !== ""}
               />
+              {selectedActivity && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Clear dropdown selection to use custom input
+                </p>
+              )}
             </div>
+
+            {/* Clear Activity Selection */}
+            {(selectedActivity || customActivity) && (
+              <div className="flex justify-center mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedActivity("");
+                    setCustomActivity("");
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors"
+                >
+                  Clear Activity Selection
+                </button>
+              </div>
+            )}
 
             <button
               id="add-btn"
