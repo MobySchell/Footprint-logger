@@ -166,6 +166,295 @@ const generateAchievements = (emissions) => {
 	return achievements;
 };
 
+// Advanced trend analysis functions
+const calculateMonthlyTrend = (emissions) => {
+	const now = new Date();
+	const months = [];
+
+	for (let i = 0; i < 6; i++) {
+		const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+		const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+
+		const monthEmissions = emissions.filter((e) => {
+			const date = new Date(e.timestamp);
+			return date >= monthStart && date <= monthEnd;
+		});
+
+		const monthTotal = monthEmissions.reduce((sum, e) => sum + e.value, 0);
+
+		months.unshift({
+			month: monthStart.toLocaleDateString("en-US", {
+				month: "long",
+				year: "numeric",
+			}),
+			total: monthTotal,
+			activities: monthEmissions.length,
+			average:
+				monthEmissions.length > 0
+					? monthTotal / monthEmissions.length
+					: 0,
+		});
+	}
+
+	// Calculate month-over-month changes
+	const trends = months.map((month, index) => {
+		if (index === 0) return { ...month, change: 0, changePercent: 0 };
+
+		const previousMonth = months[index - 1];
+		const change = month.total - previousMonth.total;
+		const changePercent =
+			previousMonth.total > 0 ? (change / previousMonth.total) * 100 : 0;
+
+		return {
+			...month,
+			change,
+			changePercent,
+			trend:
+				change > 0
+					? "increasing"
+					: change < 0
+					? "decreasing"
+					: "stable",
+		};
+	});
+
+	return trends;
+};
+
+const calculateSeasonalVariations = (emissions) => {
+	const seasons = {
+		Spring: { months: [2, 3, 4], emissions: [], total: 0 },
+		Summer: { months: [5, 6, 7], emissions: [], total: 0 },
+		Fall: { months: [8, 9, 10], emissions: [], total: 0 },
+		Winter: { months: [11, 0, 1], emissions: [], total: 0 },
+	};
+
+	emissions.forEach((emission) => {
+		const month = new Date(emission.timestamp).getMonth();
+
+		Object.keys(seasons).forEach((season) => {
+			if (seasons[season].months.includes(month)) {
+				seasons[season].emissions.push(emission);
+				seasons[season].total += emission.value;
+			}
+		});
+	});
+
+	// Calculate averages and patterns
+	const seasonalData = Object.entries(seasons).map(([season, data]) => ({
+		season,
+		total: data.total,
+		average:
+			data.emissions.length > 0 ? data.total / data.emissions.length : 0,
+		activities: data.emissions.length,
+		topCategory: getTopCategory(data.emissions),
+	}));
+
+	// Find peak season
+	const peakSeason = seasonalData.reduce((peak, current) =>
+		current.total > peak.total ? current : peak
+	);
+
+	return {
+		seasonalBreakdown: seasonalData,
+		peakSeason: peakSeason.season,
+		totalRange:
+			Math.max(...seasonalData.map((s) => s.total)) -
+			Math.min(...seasonalData.map((s) => s.total)),
+	};
+};
+
+const getTopCategory = (emissions) => {
+	if (emissions.length === 0) return null;
+
+	const categoryTotals = emissions.reduce((acc, e) => {
+		acc[e.category] = (acc[e.category] || 0) + e.value;
+		return acc;
+	}, {});
+
+	return (
+		Object.entries(categoryTotals).sort(([, a], [, b]) => b - a)[0]?.[0] ||
+		null
+	);
+};
+
+const calculateDailyPatterns = (emissions) => {
+	const dayTotals = emissions.reduce((acc, e) => {
+		const dayOfWeek = new Date(e.timestamp).getDay();
+		const dayNames = [
+			"Sunday",
+			"Monday",
+			"Tuesday",
+			"Wednesday",
+			"Thursday",
+			"Friday",
+			"Saturday",
+		];
+		const dayName = dayNames[dayOfWeek];
+
+		acc[dayName] = (acc[dayName] || 0) + e.value;
+		return acc;
+	}, {});
+
+	const dayAverages = Object.entries(dayTotals).map(([day, total]) => {
+		const dayCount = emissions.filter((e) => {
+			const dayOfWeek = new Date(e.timestamp).getDay();
+			const dayNames = [
+				"Sunday",
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday",
+			];
+			return dayNames[dayOfWeek] === day;
+		}).length;
+
+		return {
+			day,
+			total,
+			average: dayCount > 0 ? total / dayCount : 0,
+			activities: dayCount,
+		};
+	});
+
+	// Find peak day
+	const peakDay = dayAverages.reduce((peak, current) =>
+		current.average > peak.average ? current : peak
+	);
+
+	return {
+		dailyBreakdown: dayAverages,
+		peakDay: peakDay.day,
+		weekdayVsWeekend: calculateWeekdayWeekendComparison(emissions),
+	};
+};
+
+const calculateWeekdayWeekendComparison = (emissions) => {
+	const weekdayEmissions = emissions.filter((e) => {
+		const dayOfWeek = new Date(e.timestamp).getDay();
+		return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
+	});
+
+	const weekendEmissions = emissions.filter((e) => {
+		const dayOfWeek = new Date(e.timestamp).getDay();
+		return dayOfWeek === 0 || dayOfWeek === 6; // Saturday and Sunday
+	});
+
+	const weekdayTotal = weekdayEmissions.reduce((sum, e) => sum + e.value, 0);
+	const weekendTotal = weekendEmissions.reduce((sum, e) => sum + e.value, 0);
+
+	const weekdayAvg =
+		weekdayEmissions.length > 0
+			? weekdayTotal / weekdayEmissions.length
+			: 0;
+	const weekendAvg =
+		weekendEmissions.length > 0
+			? weekendTotal / weekendEmissions.length
+			: 0;
+
+	return {
+		weekday: {
+			total: weekdayTotal,
+			average: weekdayAvg,
+			activities: weekdayEmissions.length,
+		},
+		weekend: {
+			total: weekendTotal,
+			average: weekendAvg,
+			activities: weekendEmissions.length,
+		},
+		comparison:
+			weekdayAvg > weekendAvg
+				? "weekdays_higher"
+				: weekendAvg > weekdayAvg
+				? "weekends_higher"
+				: "equal",
+	};
+};
+
+const calculateImprovementPatterns = (emissions) => {
+	if (emissions.length < 4) {
+		return {
+			hasEnoughData: false,
+			message: "Need more data to identify improvement patterns",
+		};
+	}
+
+	// Sort emissions by date
+	const sortedEmissions = emissions.sort(
+		(a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+	);
+
+	// Split into first half and second half
+	const midPoint = Math.floor(sortedEmissions.length / 2);
+	const firstHalf = sortedEmissions.slice(0, midPoint);
+	const secondHalf = sortedEmissions.slice(midPoint);
+
+	const firstHalfAvg =
+		firstHalf.reduce((sum, e) => sum + e.value, 0) / firstHalf.length;
+	const secondHalfAvg =
+		secondHalf.reduce((sum, e) => sum + e.value, 0) / secondHalf.length;
+
+	const improvement = firstHalfAvg - secondHalfAvg;
+	const improvementPercent =
+		firstHalfAvg > 0 ? (improvement / firstHalfAvg) * 100 : 0;
+
+	// Category-specific improvements
+	const categoryImprovements = {};
+	const categories = [...new Set(emissions.map((e) => e.category))];
+
+	categories.forEach((category) => {
+		const categoryFirstHalf = firstHalf.filter(
+			(e) => e.category === category
+		);
+		const categorySecondHalf = secondHalf.filter(
+			(e) => e.category === category
+		);
+
+		if (categoryFirstHalf.length > 0 && categorySecondHalf.length > 0) {
+			const firstAvg =
+				categoryFirstHalf.reduce((sum, e) => sum + e.value, 0) /
+				categoryFirstHalf.length;
+			const secondAvg =
+				categorySecondHalf.reduce((sum, e) => sum + e.value, 0) /
+				categorySecondHalf.length;
+			const catImprovement = firstAvg - secondAvg;
+			const catImprovementPercent =
+				firstAvg > 0 ? (catImprovement / firstAvg) * 100 : 0;
+
+			categoryImprovements[category] = {
+				improvement: catImprovement,
+				improvementPercent: catImprovementPercent,
+				trend:
+					catImprovement > 0
+						? "improving"
+						: catImprovement < 0
+						? "worsening"
+						: "stable",
+			};
+		}
+	});
+
+	return {
+		hasEnoughData: true,
+		overallImprovement: improvement,
+		improvementPercent,
+		trend:
+			improvement > 0
+				? "improving"
+				: improvement < 0
+				? "worsening"
+				: "stable",
+		categoryImprovements,
+		bestImprovingCategory:
+			Object.entries(categoryImprovements).sort(
+				([, a], [, b]) => b.improvementPercent - a.improvementPercent
+			)[0]?.[0] || null,
+	};
+};
+
 // Main insights endpoint
 router.get("/insights/:userId", authenticateToken, async (req, res) => {
 	try {
@@ -197,6 +486,10 @@ router.get("/insights/:userId", authenticateToken, async (req, res) => {
 
 		// Calculate all insights
 		const weeklyTrend = calculateWeeklyTrend(emissions);
+		const monthlyTrend = calculateMonthlyTrend(emissions);
+		const seasonalVariations = calculateSeasonalVariations(emissions);
+		const dailyPatterns = calculateDailyPatterns(emissions);
+		const improvementPatterns = calculateImprovementPatterns(emissions);
 		const recommendations = generateRecommendations(emissions);
 		const comparison = calculateComparisons(emissions);
 		const achievements = generateAchievements(emissions);
@@ -214,6 +507,10 @@ router.get("/insights/:userId", authenticateToken, async (req, res) => {
 		const insights = {
 			hasData: true,
 			weeklyTrend,
+			monthlyTrend,
+			seasonalVariations,
+			dailyPatterns,
+			improvementPatterns,
 			recommendations,
 			comparison,
 			achievements,
