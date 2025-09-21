@@ -393,38 +393,585 @@ const getSeason = (month) => {
 	return "Winter";
 };
 
-// Helper function to calculate comparisons
+// Enhanced comparative analysis function
 const calculateComparisons = (emissions) => {
 	const now = new Date();
+
+	// Time period comparisons
+	const timeComparisons = calculateTimePeriodComparisons(emissions, now);
+
+	// Personal goal comparisons
+	const goalComparisons = calculatePersonalGoalComparisons(emissions, now);
+
+	// Category comparisons
+	const categoryComparisons = calculateCategoryComparisons(emissions, now);
+
+	// Historical trend comparisons
+	const historicalComparisons = calculateHistoricalComparisons(
+		emissions,
+		now
+	);
+
+	// Performance metrics
+	const performanceMetrics = calculatePerformanceMetrics(emissions, now);
+
+	return {
+		timePeriods: timeComparisons,
+		personalGoals: goalComparisons,
+		categories: categoryComparisons,
+		historical: historicalComparisons,
+		performance: performanceMetrics,
+		generatedAt: now,
+	};
+};
+
+const calculateTimePeriodComparisons = (emissions, now) => {
+	const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 	const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 	const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+	const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
+	// Weekly comparison
+	const thisWeek = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneWeekAgo
+	);
+	const lastWeek = emissions.filter((e) => {
+		const date = new Date(e.timestamp);
+		return date < oneWeekAgo && date >= twoWeeksAgo;
+	});
+
+	// Monthly comparison
 	const thisMonth = emissions.filter(
 		(e) => new Date(e.timestamp) >= oneMonthAgo
 	);
 	const lastMonth = emissions.filter((e) => {
 		const date = new Date(e.timestamp);
-		return date >= twoMonthsAgo && date < oneMonthAgo;
+		return date < oneMonthAgo && date >= twoMonthsAgo;
 	});
 
-	const thisMonthTotal = thisMonth.reduce((sum, e) => sum + e.value, 0);
-	const lastMonthTotal = lastMonth.reduce((sum, e) => sum + e.value, 0);
+	// Quarterly comparison
+	const thisQuarter = emissions.filter(
+		(e) => new Date(e.timestamp) >= threeMonthsAgo
+	);
+	const previousQuarter = emissions.filter((e) => {
+		const date = new Date(e.timestamp);
+		return (
+			date < threeMonthsAgo &&
+			date >= new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
+		);
+	});
 
-	const monthlyChange = thisMonthTotal - lastMonthTotal;
+	const calculatePeriodMetrics = (current, previous, periodName) => {
+		const currentTotal = current.reduce((sum, e) => sum + e.value, 0);
+		const previousTotal = previous.reduce((sum, e) => sum + e.value, 0);
+		const change = currentTotal - previousTotal;
+		const changePercentage =
+			previousTotal > 0 ? (change / previousTotal) * 100 : 0;
 
-	// Calculate personal average (all time)
-	const totalEmissions = emissions.reduce((sum, e) => sum + e.value, 0);
-	const averagePerDay =
-		emissions.length > 0 ? totalEmissions / emissions.length : 0;
-	const currentDailyAverage =
-		thisMonth.length > 0 ? thisMonthTotal / thisMonth.length : 0;
+		const currentAvg =
+			current.length > 0 ? currentTotal / current.length : 0;
+		const previousAvg =
+			previous.length > 0 ? previousTotal / previous.length : 0;
+
+		return {
+			period: periodName,
+			current: {
+				total: currentTotal,
+				average: currentAvg,
+				activities: current.length,
+			},
+			previous: {
+				total: previousTotal,
+				average: previousAvg,
+				activities: previous.length,
+			},
+			comparison: {
+				change,
+				changePercentage,
+				trend:
+					change > 0
+						? "increasing"
+						: change < 0
+						? "decreasing"
+						: "stable",
+				interpretation: getChangeInterpretation(changePercentage),
+			},
+		};
+	};
 
 	return {
-		vsLastMonth: monthlyChange,
-		vsPersonalAverage: currentDailyAverage - averagePerDay,
-		thisMonthTotal,
-		lastMonthTotal,
+		weekly: calculatePeriodMetrics(thisWeek, lastWeek, "weekly"),
+		monthly: calculatePeriodMetrics(thisMonth, lastMonth, "monthly"),
+		quarterly: calculatePeriodMetrics(
+			thisQuarter,
+			previousQuarter,
+			"quarterly"
+		),
 	};
+};
+
+const calculatePersonalGoalComparisons = (emissions, now) => {
+	// Default personal goals (these could be stored in user preferences in the future)
+	const defaultGoals = {
+		dailyTarget: 5.0, // kg CO₂ per day
+		weeklyTarget: 35.0, // kg CO₂ per week
+		monthlyTarget: 150.0, // kg CO₂ per month
+		yearlyTarget: 1800.0, // kg CO₂ per year
+		categoryTargets: {
+			Transport: 30, // % of total emissions
+			Food: 25,
+			Energy: 20,
+			Housing: 15,
+			Consumption: 10,
+		},
+	};
+
+	const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+	const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+	// Current period emissions
+	const weeklyEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneWeekAgo
+	);
+	const monthlyEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneMonthAgo
+	);
+	const yearlyEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneYearAgo
+	);
+
+	const weeklyTotal = weeklyEmissions.reduce((sum, e) => sum + e.value, 0);
+	const monthlyTotal = monthlyEmissions.reduce((sum, e) => sum + e.value, 0);
+	const yearlyTotal = yearlyEmissions.reduce((sum, e) => sum + e.value, 0);
+
+	// Calculate daily average for this week
+	const daysWithData = new Set(
+		weeklyEmissions.map((e) => new Date(e.timestamp).toDateString())
+	).size;
+	const dailyAverage = daysWithData > 0 ? weeklyTotal / daysWithData : 0;
+
+	// Category distribution
+	const categoryTotals = monthlyEmissions.reduce((acc, e) => {
+		acc[e.category] = (acc[e.category] || 0) + e.value;
+		return acc;
+	}, {});
+
+	const categoryPercentages = {};
+	Object.keys(categoryTotals).forEach((category) => {
+		categoryPercentages[category] =
+			monthlyTotal > 0
+				? (categoryTotals[category] / monthlyTotal) * 100
+				: 0;
+	});
+
+	const calculateGoalComparison = (actual, target, period) => {
+		const difference = actual - target;
+		const percentageOfTarget = target > 0 ? (actual / target) * 100 : 0;
+		const status =
+			actual <= target
+				? "on_track"
+				: actual <= target * 1.1
+				? "close"
+				: "over_target";
+
+		return {
+			period,
+			target,
+			actual,
+			difference,
+			percentageOfTarget,
+			status,
+			daysRemaining: getDaysRemainingInPeriod(period, now),
+		};
+	};
+
+	return {
+		daily: calculateGoalComparison(
+			dailyAverage,
+			defaultGoals.dailyTarget,
+			"daily"
+		),
+		weekly: calculateGoalComparison(
+			weeklyTotal,
+			defaultGoals.weeklyTarget,
+			"weekly"
+		),
+		monthly: calculateGoalComparison(
+			monthlyTotal,
+			defaultGoals.monthlyTarget,
+			"monthly"
+		),
+		yearly: calculateGoalComparison(
+			yearlyTotal,
+			defaultGoals.yearlyTarget,
+			"yearly"
+		),
+		categoryTargets: Object.keys(defaultGoals.categoryTargets).map(
+			(category) => ({
+				category,
+				target: defaultGoals.categoryTargets[category],
+				actual: categoryPercentages[category] || 0,
+				difference:
+					(categoryPercentages[category] || 0) -
+					defaultGoals.categoryTargets[category],
+				status:
+					(categoryPercentages[category] || 0) <=
+					defaultGoals.categoryTargets[category]
+						? "on_track"
+						: "over_target",
+			})
+		),
+	};
+};
+
+const calculateCategoryComparisons = (emissions, now) => {
+	const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+	// Current week by category
+	const thisWeekByCategory = emissions
+		.filter((e) => new Date(e.timestamp) >= oneWeekAgo)
+		.reduce((acc, e) => {
+			acc[e.category] = (acc[e.category] || 0) + e.value;
+			return acc;
+		}, {});
+
+	// Previous week by category
+	const lastWeekByCategory = emissions
+		.filter((e) => {
+			const date = new Date(e.timestamp);
+			return date < oneWeekAgo && date >= twoWeeksAgo;
+		})
+		.reduce((acc, e) => {
+			acc[e.category] = (acc[e.category] || 0) + e.value;
+			return acc;
+		}, {});
+
+	// Calculate category comparisons
+	const allCategories = new Set([
+		...Object.keys(thisWeekByCategory),
+		...Object.keys(lastWeekByCategory),
+	]);
+
+	const categoryComparisons = Array.from(allCategories).map((category) => {
+		const current = thisWeekByCategory[category] || 0;
+		const previous = lastWeekByCategory[category] || 0;
+		const change = current - previous;
+		const changePercentage = previous > 0 ? (change / previous) * 100 : 0;
+
+		return {
+			category,
+			current,
+			previous,
+			change,
+			changePercentage,
+			trend:
+				change > 0
+					? "increasing"
+					: change < 0
+					? "decreasing"
+					: "stable",
+			interpretation: getChangeInterpretation(changePercentage),
+		};
+	});
+
+	// Sort by absolute change to identify most significant changes
+	const sortedByChange = [...categoryComparisons].sort(
+		(a, b) => Math.abs(b.change) - Math.abs(a.change)
+	);
+
+	return {
+		byCategory: categoryComparisons,
+		mostChanged: sortedByChange.slice(0, 3),
+		improvingCategories: categoryComparisons.filter(
+			(c) => c.trend === "decreasing"
+		),
+		worseningCategories: categoryComparisons.filter(
+			(c) => c.trend === "increasing"
+		),
+	};
+};
+
+const calculateHistoricalComparisons = (emissions, now) => {
+	if (emissions.length === 0) {
+		return {
+			hasData: false,
+			message: "Not enough historical data for comparison",
+		};
+	}
+
+	// Calculate rolling averages
+	const rollingAverages = calculateRollingAverages(emissions, now);
+
+	// Calculate percentile rankings
+	const percentileRankings = calculatePercentileRankings(emissions, now);
+
+	// Calculate all-time statistics
+	const allTimeStats = calculateAllTimeStatistics(emissions);
+
+	return {
+		hasData: true,
+		rollingAverages,
+		percentileRankings,
+		allTimeStats,
+	};
+};
+
+const calculateRollingAverages = (emissions, now) => {
+	const periods = [7, 14, 30, 90]; // days
+	const rollingAverages = {};
+
+	periods.forEach((days) => {
+		const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+		const periodEmissions = emissions.filter(
+			(e) => new Date(e.timestamp) >= cutoffDate
+		);
+
+		const total = periodEmissions.reduce((sum, e) => sum + e.value, 0);
+		const average =
+			periodEmissions.length > 0 ? total / periodEmissions.length : 0;
+
+		rollingAverages[`${days}day`] = {
+			period: `${days} days`,
+			total,
+			average,
+			activities: periodEmissions.length,
+		};
+	});
+
+	return rollingAverages;
+};
+
+const calculatePercentileRankings = (emissions, now) => {
+	if (emissions.length < 10) {
+		return {
+			hasEnoughData: false,
+			message: "Need at least 10 data points for percentile analysis",
+		};
+	}
+
+	// Group emissions by week
+	const weeklyTotals = [];
+	const weeksBack = 12; // Analyze last 12 weeks
+
+	for (let i = 0; i < weeksBack; i++) {
+		const weekStart = new Date(
+			now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000
+		);
+		const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+
+		const weekEmissions = emissions.filter((e) => {
+			const date = new Date(e.timestamp);
+			return date >= weekStart && date < weekEnd;
+		});
+
+		if (weekEmissions.length > 0) {
+			weeklyTotals.push(
+				weekEmissions.reduce((sum, e) => sum + e.value, 0)
+			);
+		}
+	}
+
+	if (weeklyTotals.length < 4) {
+		return {
+			hasEnoughData: false,
+			message: "Need at least 4 weeks of data for percentile analysis",
+		};
+	}
+
+	// Current week
+	const currentWeekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const currentWeekEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= currentWeekStart
+	);
+	const currentWeekTotal = currentWeekEmissions.reduce(
+		(sum, e) => sum + e.value,
+		0
+	);
+
+	// Calculate percentiles
+	const sortedWeekly = [...weeklyTotals].sort((a, b) => a - b);
+	const percentiles = [10, 25, 50, 75, 90].map((p) => ({
+		percentile: p,
+		value: calculatePercentile(sortedWeekly, p),
+	}));
+
+	// Find current week's percentile ranking
+	const currentPercentile = calculateCurrentPercentile(
+		currentWeekTotal,
+		sortedWeekly
+	);
+
+	return {
+		hasEnoughData: true,
+		currentWeek: currentWeekTotal,
+		currentPercentile,
+		percentiles,
+		interpretation: getPercentileInterpretation(currentPercentile),
+	};
+};
+
+const calculateAllTimeStatistics = (emissions) => {
+	if (emissions.length === 0) return null;
+
+	const allValues = emissions.map((e) => e.value);
+	const total = allValues.reduce((sum, val) => sum + val, 0);
+
+	const sortedValues = [...allValues].sort((a, b) => a - b);
+	const min = sortedValues[0];
+	const max = sortedValues[sortedValues.length - 1];
+	const median = calculatePercentile(sortedValues, 50);
+	const average = total / allValues.length;
+
+	// Find date range
+	const dates = emissions.map((e) => new Date(e.timestamp));
+	const earliest = new Date(Math.min(...dates));
+	const latest = new Date(Math.max(...dates));
+	const totalDays =
+		Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1;
+
+	return {
+		total,
+		average,
+		median,
+		min,
+		max,
+		totalActivities: emissions.length,
+		dateRange: {
+			earliest,
+			latest,
+			totalDays,
+		},
+		dailyAverage: total / totalDays,
+	};
+};
+
+const calculatePerformanceMetrics = (emissions, now) => {
+	const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+	const recentEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneMonthAgo
+	);
+
+	if (recentEmissions.length === 0) {
+		return {
+			hasData: false,
+			message: "No recent data for performance analysis",
+		};
+	}
+
+	// Consistency metrics
+	const dailyTotals = {};
+	recentEmissions.forEach((e) => {
+		const date = new Date(e.timestamp).toDateString();
+		dailyTotals[date] = (dailyTotals[date] || 0) + e.value;
+	});
+
+	const dailyValues = Object.values(dailyTotals);
+	const average =
+		dailyValues.reduce((sum, val) => sum + val, 0) / dailyValues.length;
+	const variance =
+		dailyValues.reduce((sum, val) => sum + Math.pow(val - average, 2), 0) /
+		dailyValues.length;
+	const standardDeviation = Math.sqrt(variance);
+	const coefficientOfVariation =
+		average > 0 ? (standardDeviation / average) * 100 : 0;
+
+	// Frequency metrics
+	const totalDays = Math.ceil((now - oneMonthAgo) / (1000 * 60 * 60 * 24));
+	const activeDays = Object.keys(dailyTotals).length;
+	const trackingFrequency = (activeDays / totalDays) * 100;
+
+	return {
+		hasData: true,
+		consistency: {
+			average,
+			standardDeviation,
+			coefficientOfVariation,
+			interpretation: getConsistencyInterpretation(
+				coefficientOfVariation
+			),
+		},
+		frequency: {
+			totalDays,
+			activeDays,
+			trackingFrequency,
+			interpretation: getFrequencyInterpretation(trackingFrequency),
+		},
+	};
+};
+
+// Helper functions
+const getChangeInterpretation = (changePercentage) => {
+	const absChange = Math.abs(changePercentage);
+	if (absChange < 5) return "minimal_change";
+	if (absChange < 15) return "moderate_change";
+	if (absChange < 30) return "significant_change";
+	return "major_change";
+};
+
+const getDaysRemainingInPeriod = (period, now) => {
+	switch (period) {
+		case "daily":
+			return 1;
+		case "weekly":
+			const daysUntilSunday = (7 - now.getDay()) % 7;
+			return daysUntilSunday === 0 ? 7 : daysUntilSunday;
+		case "monthly":
+			const lastDayOfMonth = new Date(
+				now.getFullYear(),
+				now.getMonth() + 1,
+				0
+			).getDate();
+			return lastDayOfMonth - now.getDate();
+		case "yearly":
+			const endOfYear = new Date(now.getFullYear(), 11, 31);
+			return Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24));
+		default:
+			return 0;
+	}
+};
+
+const calculatePercentile = (sortedArray, percentile) => {
+	const index = (percentile / 100) * (sortedArray.length - 1);
+	const lower = Math.floor(index);
+	const upper = Math.ceil(index);
+	const weight = index % 1;
+
+	if (upper >= sortedArray.length) return sortedArray[sortedArray.length - 1];
+	if (lower === upper) return sortedArray[lower];
+
+	return sortedArray[lower] * (1 - weight) + sortedArray[upper] * weight;
+};
+
+const calculateCurrentPercentile = (value, sortedArray) => {
+	let count = 0;
+	for (let i = 0; i < sortedArray.length; i++) {
+		if (sortedArray[i] < value) count++;
+	}
+	return (count / sortedArray.length) * 100;
+};
+
+const getPercentileInterpretation = (percentile) => {
+	if (percentile <= 25) return "excellent";
+	if (percentile <= 50) return "good";
+	if (percentile <= 75) return "average";
+	return "needs_improvement";
+};
+
+const getConsistencyInterpretation = (coefficientOfVariation) => {
+	if (coefficientOfVariation < 20) return "very_consistent";
+	if (coefficientOfVariation < 40) return "moderately_consistent";
+	if (coefficientOfVariation < 60) return "somewhat_inconsistent";
+	return "highly_variable";
+};
+
+const getFrequencyInterpretation = (frequency) => {
+	if (frequency >= 90) return "excellent_tracking";
+	if (frequency >= 70) return "good_tracking";
+	if (frequency >= 50) return "moderate_tracking";
+	return "inconsistent_tracking";
 };
 
 // Helper function to generate achievements
@@ -945,6 +1492,81 @@ router.get("/recommendations/:userId", authenticateToken, async (req, res) => {
 		console.error("Error generating recommendations:", error);
 		res.status(500).json({
 			message: "Server error generating recommendations",
+		});
+	}
+});
+
+// Dedicated comparative analysis endpoint
+router.get("/comparisons/:userId", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+
+		// Ensure user can only access their own comparisons
+		if (userId !== req.user.id.toString()) {
+			return res.status(403).json({
+				message: "Cannot access another user's comparative analysis",
+			});
+		}
+
+		// Fetch user's emissions
+		const emissions = await req.db
+			.collection("emissions")
+			.find({ userId: new ObjectId(userId) })
+			.sort({ timestamp: -1 })
+			.toArray();
+
+		if (emissions.length === 0) {
+			return res.json({
+				comparisons: {
+					hasData: false,
+					message:
+						"Start tracking activities to see comparative analysis!",
+				},
+			});
+		}
+
+		// Generate comprehensive comparisons
+		const comparisons = calculateComparisons(emissions);
+
+		res.json({
+			comparisons,
+			summary: {
+				totalDataPoints: emissions.length,
+				dateRange: {
+					earliest:
+						emissions.length > 0
+							? new Date(
+									Math.min(
+										...emissions.map(
+											(e) => new Date(e.timestamp)
+										)
+									)
+							  )
+							: null,
+					latest:
+						emissions.length > 0
+							? new Date(
+									Math.max(
+										...emissions.map(
+											(e) => new Date(e.timestamp)
+										)
+									)
+							  )
+							: null,
+				},
+				analysisTypes: [
+					"Time Period Comparisons",
+					"Personal Goal Analysis",
+					"Category Comparisons",
+					"Historical Trends",
+					"Performance Metrics",
+				],
+			},
+		});
+	} catch (error) {
+		console.error("Error generating comparative analysis:", error);
+		res.status(500).json({
+			message: "Server error generating comparative analysis",
 		});
 	}
 });
