@@ -974,14 +974,516 @@ const getFrequencyInterpretation = (frequency) => {
 	return "inconsistent_tracking";
 };
 
-// Helper function to generate achievements
+// Enhanced insights and notification system
 const generateAchievements = (emissions) => {
-	const achievements = [];
+	const insights = {
+		achievements: [],
+		warnings: [],
+		milestones: [],
+		celebrations: [],
+		notifications: [],
+	};
 
-	// Check for logging streak
+	if (emissions.length === 0) {
+		insights.notifications.push({
+			type: "welcome",
+			priority: "medium",
+			title: "Welcome to Carbon Tracking!",
+			message:
+				"Start by logging your first activity to begin your journey toward sustainability.",
+			icon: "🌱",
+			actionable: true,
+			action: "Log First Activity",
+		});
+		return insights;
+	}
+
+	// Generate all insight types
+	const achievements = generateUserAchievements(emissions);
+	const warnings = generateWarnings(emissions);
+	const milestones = generateMilestones(emissions);
+	const celebrations = generateCelebrations(emissions);
+	const notifications = generateSmartNotifications(emissions);
+
+	return {
+		achievements,
+		warnings,
+		milestones,
+		celebrations,
+		notifications: [
+			...notifications,
+			...achievements,
+			...warnings,
+			...milestones,
+			...celebrations,
+		],
+		summary: {
+			totalInsights:
+				achievements.length +
+				warnings.length +
+				milestones.length +
+				celebrations.length,
+			highPriority: notifications.filter((n) => n.priority === "high")
+				.length,
+			mediumPriority: notifications.filter((n) => n.priority === "medium")
+				.length,
+			lowPriority: notifications.filter((n) => n.priority === "low")
+				.length,
+		},
+	};
+};
+
+const generateUserAchievements = (emissions) => {
+	const achievements = [];
 	const today = new Date();
+
+	// 1. Logging Streak Achievement
+	const streak = calculateLoggingStreak(emissions, today);
+	if (streak >= 3) {
+		achievements.push({
+			type: "achievement",
+			category: "consistency",
+			priority: streak >= 7 ? "high" : "medium",
+			title: `${streak}-Day Tracking Streak! 🔥`,
+			message: `You've been consistently tracking for ${streak} days in a row. Keep up the momentum!`,
+			icon: "🔥",
+			points: streak * 10,
+			unlocked: true,
+			date: today,
+		});
+	}
+
+	// 2. Emission Reduction Achievement
+	const weeklyTrend = calculateWeeklyTrend(emissions);
+	if (weeklyTrend.changePercentage < -10) {
+		const reductionPercent = Math.abs(weeklyTrend.changePercentage);
+		achievements.push({
+			type: "achievement",
+			category: "improvement",
+			priority: reductionPercent >= 25 ? "high" : "medium",
+			title: `${reductionPercent.toFixed(0)}% Weekly Reduction! 📉`,
+			message: `Excellent progress! You've reduced your weekly emissions by ${reductionPercent.toFixed(
+				1
+			)}%.`,
+			icon: "📉",
+			points: Math.floor(reductionPercent * 5),
+			unlocked: true,
+			date: today,
+		});
+	}
+
+	// 3. Category Mastery Achievement
+	const categoryImprovements = calculateImprovementPatterns(emissions);
+	if (
+		categoryImprovements.hasEnoughData &&
+		categoryImprovements.bestImprovingCategory
+	) {
+		achievements.push({
+			type: "achievement",
+			category: "expertise",
+			priority: "medium",
+			title: `${categoryImprovements.bestImprovingCategory} Master! 🏆`,
+			message: `You're excelling at reducing ${categoryImprovements.bestImprovingCategory} emissions!`,
+			icon: "🏆",
+			points: 100,
+			unlocked: true,
+			date: today,
+		});
+	}
+
+	// 4. Low Impact Day Achievement
+	const recentEmissions = emissions.filter(
+		(e) =>
+			new Date(e.timestamp) >=
+			new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+	);
+	const dailyTotals = {};
+	recentEmissions.forEach((e) => {
+		const date = new Date(e.timestamp).toDateString();
+		dailyTotals[date] = (dailyTotals[date] || 0) + e.value;
+	});
+
+	const lowImpactDays = Object.values(dailyTotals).filter(
+		(total) => total < 3.0
+	); // Under 3kg CO₂
+	if (lowImpactDays.length >= 1) {
+		achievements.push({
+			type: "achievement",
+			category: "daily_goal",
+			priority: "medium",
+			title: "Low Impact Day! 🌿",
+			message: `You had ${lowImpactDays.length} day(s) this week under 3kg CO₂. Great work!`,
+			icon: "🌿",
+			points: lowImpactDays.length * 25,
+			unlocked: true,
+			date: today,
+		});
+	}
+
+	// 5. Data Completeness Achievement
+	const activeDays = Object.keys(dailyTotals).length;
+	if (activeDays >= 6) {
+		achievements.push({
+			type: "achievement",
+			category: "completeness",
+			priority: "medium",
+			title: "Consistent Tracker! 📊",
+			message: `You tracked activities for ${activeDays} out of 7 days this week!`,
+			icon: "📊",
+			points: 50,
+			unlocked: true,
+			date: today,
+		});
+	}
+
+	return achievements;
+};
+
+const generateWarnings = (emissions) => {
+	const warnings = [];
+	const today = new Date();
+
+	// 1. Increasing Emission Trend Warning
+	const weeklyTrend = calculateWeeklyTrend(emissions);
+	if (weeklyTrend.changePercentage > 15) {
+		warnings.push({
+			type: "warning",
+			category: "trend",
+			priority: "high",
+			title: "Rising Emissions Alert! ⚠️",
+			message: `Your emissions increased by ${weeklyTrend.changePercentage.toFixed(
+				1
+			)}% this week. Consider reviewing your activities.`,
+			icon: "⚠️",
+			actionable: true,
+			action: "View Recommendations",
+			date: today,
+		});
+	}
+
+	// 2. Goal Overshoot Warning
+	const goalComparisons = calculatePersonalGoalComparisons(emissions, today);
+	if (goalComparisons.weekly.status === "over_target") {
+		const overshoot = goalComparisons.weekly.percentageOfTarget - 100;
+		warnings.push({
+			type: "warning",
+			category: "goals",
+			priority: overshoot > 25 ? "high" : "medium",
+			title: "Weekly Goal Exceeded! 🎯",
+			message: `You're ${overshoot.toFixed(
+				0
+			)}% over your weekly goal with ${
+				goalComparisons.weekly.daysRemaining
+			} days remaining.`,
+			icon: "🎯",
+			actionable: true,
+			action: "Adjust Activities",
+			date: today,
+		});
+	}
+
+	// 3. Tracking Gap Warning
+	const daysSinceLastLog = getDaysSinceLastLog(emissions, today);
+	if (daysSinceLastLog > 2) {
+		warnings.push({
+			type: "warning",
+			category: "tracking",
+			priority: daysSinceLastLog > 5 ? "high" : "medium",
+			title: "Tracking Gap Detected! 📝",
+			message: `It's been ${daysSinceLastLog} days since your last activity log. Stay consistent!`,
+			icon: "📝",
+			actionable: true,
+			action: "Log Activity",
+			date: today,
+		});
+	}
+
+	// 4. High Single-Day Emissions Warning
+	const recentEmissions = emissions.filter(
+		(e) =>
+			new Date(e.timestamp) >=
+			new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+	);
+	const dailyTotals = {};
+	recentEmissions.forEach((e) => {
+		const date = new Date(e.timestamp).toDateString();
+		dailyTotals[date] = (dailyTotals[date] || 0) + e.value;
+	});
+
+	const highImpactDays = Object.entries(dailyTotals).filter(
+		([date, total]) => total > 10.0
+	); // Over 10kg CO₂
+	if (highImpactDays.length > 0) {
+		const [highestDate, highestValue] = highImpactDays.reduce(
+			(max, current) => (current[1] > max[1] ? current : max)
+		);
+		warnings.push({
+			type: "warning",
+			category: "daily_high",
+			priority: "medium",
+			title: "High Impact Day! 📈",
+			message: `You had a high emission day (${highestValue.toFixed(
+				1
+			)}kg CO₂). Consider balancing with lower impact activities.`,
+			icon: "📈",
+			actionable: true,
+			action: "View Tips",
+			date: new Date(highestDate),
+		});
+	}
+
+	return warnings;
+};
+
+const generateMilestones = (emissions) => {
+	const milestones = [];
+	const today = new Date();
+	const totalActivities = emissions.length;
+	const totalEmissions = emissions.reduce((sum, e) => sum + e.value, 0);
+
+	// 1. Activity Count Milestones
+	const activityMilestones = [10, 25, 50, 100, 250, 500, 1000];
+	const reachedMilestone = activityMilestones.find(
+		(milestone) =>
+			totalActivities >= milestone && totalActivities < milestone + 5
+	);
+	if (reachedMilestone) {
+		milestones.push({
+			type: "milestone",
+			category: "activities",
+			priority: "medium",
+			title: `${reachedMilestone} Activities Logged! 🎯`,
+			message: `Congratulations! You've tracked ${totalActivities} activities so far.`,
+			icon: "🎯",
+			points: reachedMilestone * 2,
+			progress: {
+				current: totalActivities,
+				target: reachedMilestone,
+				percentage: 100,
+			},
+			date: today,
+		});
+	}
+
+	// 2. Time-based Milestones
+	const firstActivity =
+		emissions.length > 0
+			? new Date(Math.min(...emissions.map((e) => new Date(e.timestamp))))
+			: null;
+	if (firstActivity) {
+		const daysTracking = Math.floor(
+			(today - firstActivity) / (1000 * 60 * 60 * 24)
+		);
+		const timeMilestones = [7, 30, 60, 100, 200, 365];
+		const reachedTimeMilestone = timeMilestones.find(
+			(milestone) =>
+				daysTracking >= milestone && daysTracking < milestone + 3
+		);
+		if (reachedTimeMilestone) {
+			milestones.push({
+				type: "milestone",
+				category: "duration",
+				priority: "medium",
+				title: `${reachedTimeMilestone} Days of Tracking! 📅`,
+				message: `You've been tracking your carbon footprint for ${daysTracking} days!`,
+				icon: "📅",
+				points: reachedTimeMilestone * 3,
+				progress: {
+					current: daysTracking,
+					target: reachedTimeMilestone,
+					percentage: 100,
+				},
+				date: today,
+			});
+		}
+	}
+
+	// 3. Emission Reduction Milestones
+	const improvementPatterns = calculateImprovementPatterns(emissions);
+	if (
+		improvementPatterns.hasEnoughData &&
+		improvementPatterns.improvementPercent > 0
+	) {
+		const reductionMilestones = [10, 25, 50, 75];
+		const reachedReduction = reductionMilestones.find(
+			(milestone) =>
+				improvementPatterns.improvementPercent >= milestone &&
+				improvementPatterns.improvementPercent < milestone + 5
+		);
+		if (reachedReduction) {
+			milestones.push({
+				type: "milestone",
+				category: "improvement",
+				priority: "high",
+				title: `${reachedReduction}% Total Reduction! 🌟`,
+				message: `Amazing! You've reduced your emissions by ${improvementPatterns.improvementPercent.toFixed(
+					1
+				)}% overall.`,
+				icon: "🌟",
+				points: reachedReduction * 10,
+				progress: {
+					current: improvementPatterns.improvementPercent,
+					target: reachedReduction,
+					percentage: 100,
+				},
+				date: today,
+			});
+		}
+	}
+
+	return milestones;
+};
+
+const generateCelebrations = (emissions) => {
+	const celebrations = [];
+	const today = new Date();
+
+	// 1. Personal Best Celebrations
+	const personalBests = findPersonalBests(emissions);
+	personalBests.forEach((best) => {
+		celebrations.push({
+			type: "celebration",
+			category: "personal_best",
+			priority: "high",
+			title: `New Personal Best! 🎉`,
+			message: `${best.description} - keep up the excellent work!`,
+			icon: "🎉",
+			points: 150,
+			date: today,
+		});
+	});
+
+	// 2. Streak Celebrations
+	const currentStreak = calculateLoggingStreak(emissions, today);
+	const streakMilestones = [7, 14, 30, 60, 100];
+	if (streakMilestones.includes(currentStreak)) {
+		celebrations.push({
+			type: "celebration",
+			category: "streak",
+			priority: "high",
+			title: `${currentStreak}-Day Streak! 🔥`,
+			message: `Incredible consistency! You've tracked activities for ${currentStreak} days straight!`,
+			icon: "🔥",
+			points: currentStreak * 15,
+			date: today,
+		});
+	}
+
+	// 3. Goal Achievement Celebrations
+	const goalComparisons = calculatePersonalGoalComparisons(emissions, today);
+	const onTrackGoals = [
+		goalComparisons.daily,
+		goalComparisons.weekly,
+		goalComparisons.monthly,
+	].filter((goal) => goal.status === "on_track");
+
+	if (onTrackGoals.length >= 2) {
+		celebrations.push({
+			type: "celebration",
+			category: "goals",
+			priority: "medium",
+			title: "Multiple Goals On Track! 🎯",
+			message: `You're meeting ${onTrackGoals.length} of your emission goals. Fantastic progress!`,
+			icon: "🎯",
+			points: onTrackGoals.length * 50,
+			date: today,
+		});
+	}
+
+	return celebrations;
+};
+
+const generateSmartNotifications = (emissions) => {
+	const notifications = [];
+	const today = new Date();
+
+	// 1. Daily Check-in Notification
+	const todayEmissions = emissions.filter((e) => {
+		const date = new Date(e.timestamp);
+		return date.toDateString() === today.toDateString();
+	});
+
+	if (todayEmissions.length === 0 && today.getHours() >= 18) {
+		notifications.push({
+			type: "reminder",
+			priority: "medium",
+			title: "Daily Check-in Time! ⏰",
+			message:
+				"Don't forget to log today's activities before the day ends.",
+			icon: "⏰",
+			actionable: true,
+			action: "Log Today's Activities",
+			timing: "evening",
+		});
+	}
+
+	// 2. Weekly Review Notification
+	if (today.getDay() === 0 && today.getHours() >= 10) {
+		// Sunday morning
+		const weeklyStats = getWeeklyStats(emissions);
+		notifications.push({
+			type: "review",
+			priority: "medium",
+			title: "Weekly Review Available! 📊",
+			message: `This week: ${
+				weeklyStats.activities
+			} activities, ${weeklyStats.total.toFixed(
+				1
+			)}kg CO₂. View your detailed analysis.`,
+			icon: "📊",
+			actionable: true,
+			action: "View Weekly Report",
+			timing: "weekly",
+		});
+	}
+
+	// 3. Goal Progress Notification
+	const goalComparisons = calculatePersonalGoalComparisons(emissions, today);
+	if (
+		goalComparisons.weekly.percentageOfTarget > 80 &&
+		goalComparisons.weekly.percentageOfTarget < 100
+	) {
+		notifications.push({
+			type: "progress",
+			priority: "medium",
+			title: "Close to Weekly Goal! 🎯",
+			message: `You're at ${goalComparisons.weekly.percentageOfTarget.toFixed(
+				0
+			)}% of your weekly goal. ${
+				goalComparisons.weekly.daysRemaining
+			} days left!`,
+			icon: "🎯",
+			actionable: true,
+			action: "View Goal Progress",
+			timing: "goal_proximity",
+		});
+	}
+
+	// 4. Motivation Notification
+	const improvementPatterns = calculateImprovementPatterns(emissions);
+	if (
+		improvementPatterns.hasEnoughData &&
+		improvementPatterns.trend === "improving"
+	) {
+		notifications.push({
+			type: "motivation",
+			priority: "low",
+			title: "You're Improving! 📈",
+			message: `Your efforts are paying off! Keep up the great work toward sustainability.`,
+			icon: "📈",
+			actionable: false,
+			timing: "encouragement",
+		});
+	}
+
+	return notifications;
+};
+
+// Helper functions for insights
+const calculateLoggingStreak = (emissions, today) => {
 	let streak = 0;
-	for (let i = 0; i < 7; i++) {
+	for (let i = 0; i < 30; i++) {
+		// Check up to 30 days
 		const checkDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
 		const dayEmissions = emissions.filter((e) => {
 			const emissionDate = new Date(e.timestamp);
@@ -994,27 +1496,33 @@ const generateAchievements = (emissions) => {
 			break;
 		}
 	}
+	return streak;
+};
 
-	if (streak >= 3) {
-		achievements.push(`${streak}-day streak of logging activities!`);
-	}
+const getDaysSinceLastLog = (emissions, today) => {
+	if (emissions.length === 0) return Infinity;
+	const lastLog = new Date(
+		Math.max(...emissions.map((e) => new Date(e.timestamp)))
+	);
+	return Math.floor((today - lastLog) / (1000 * 60 * 60 * 24));
+};
 
-	// Check for emission reduction
-	const weeklyTrend = calculateWeeklyTrend(emissions);
-	if (weeklyTrend.changePercentage < -10) {
-		achievements.push(
-			`${Math.abs(weeklyTrend.changePercentage).toFixed(
-				0
-			)}% reduction in weekly emissions`
-		);
-	}
+const findPersonalBests = (emissions) => {
+	const bests = [];
+	// This would analyze historical data to find personal records
+	// For now, return empty array - could be enhanced with actual PB detection
+	return bests;
+};
 
-	// Check total activities milestone
-	if (emissions.length >= 50 && emissions.length % 25 === 0) {
-		achievements.push(`${emissions.length} activities tracked milestone!`);
-	}
-
-	return achievements;
+const getWeeklyStats = (emissions) => {
+	const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+	const weekEmissions = emissions.filter(
+		(e) => new Date(e.timestamp) >= oneWeekAgo
+	);
+	return {
+		activities: weekEmissions.length,
+		total: weekEmissions.reduce((sum, e) => sum + e.value, 0),
+	};
 };
 
 // Advanced trend analysis functions
@@ -1567,6 +2075,163 @@ router.get("/comparisons/:userId", authenticateToken, async (req, res) => {
 		console.error("Error generating comparative analysis:", error);
 		res.status(500).json({
 			message: "Server error generating comparative analysis",
+		});
+	}
+});
+
+// Dedicated insights and notifications endpoint
+router.get("/notifications/:userId", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+
+		// Ensure user can only access their own notifications
+		if (userId !== req.user.id.toString()) {
+			return res.status(403).json({
+				message: "Cannot access another user's notifications",
+			});
+		}
+
+		// Fetch user's emissions
+		const emissions = await req.db
+			.collection("emissions")
+			.find({ userId: new ObjectId(userId) })
+			.sort({ timestamp: -1 })
+			.toArray();
+
+		// Generate comprehensive insights and notifications
+		const insights = generateAchievements(emissions);
+
+		// Add metadata
+		const responseData = {
+			...insights,
+			metadata: {
+				userId,
+				generatedAt: new Date(),
+				totalDataPoints: emissions.length,
+				analysisDate: new Date(),
+				userJoinedDays:
+					emissions.length > 0
+						? Math.floor(
+								(new Date() -
+									new Date(
+										Math.min(
+											...emissions.map(
+												(e) => new Date(e.timestamp)
+											)
+										)
+									)) /
+									(1000 * 60 * 60 * 24)
+						  )
+						: 0,
+			},
+		};
+
+		res.json(responseData);
+	} catch (error) {
+		console.error("Error generating insights and notifications:", error);
+		res.status(500).json({
+			message: "Server error generating insights and notifications",
+		});
+	}
+});
+
+// Quick daily summary endpoint
+router.get("/daily-summary/:userId", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+
+		// Ensure user can only access their own daily summary
+		if (userId !== req.user.id.toString()) {
+			return res.status(403).json({
+				message: "Cannot access another user's daily summary",
+			});
+		}
+
+		// Fetch user's emissions
+		const emissions = await req.db
+			.collection("emissions")
+			.find({ userId: new ObjectId(userId) })
+			.sort({ timestamp: -1 })
+			.toArray();
+
+		const today = new Date();
+		const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+		// Today's data
+		const todayEmissions = emissions.filter((e) => {
+			const date = new Date(e.timestamp);
+			return date.toDateString() === today.toDateString();
+		});
+
+		// Yesterday's data for comparison
+		const yesterdayEmissions = emissions.filter((e) => {
+			const date = new Date(e.timestamp);
+			return date.toDateString() === yesterday.toDateString();
+		});
+
+		const todayTotal = todayEmissions.reduce((sum, e) => sum + e.value, 0);
+		const yesterdayTotal = yesterdayEmissions.reduce(
+			(sum, e) => sum + e.value,
+			0
+		);
+
+		// Quick insights
+		const quickInsights = generateAchievements(emissions);
+		const priorityNotifications = quickInsights.notifications
+			.filter((n) => n.priority === "high")
+			.slice(0, 3);
+
+		// Goal progress
+		const goalComparisons = calculatePersonalGoalComparisons(
+			emissions,
+			today
+		);
+
+		const dailySummary = {
+			today: {
+				date: today.toDateString(),
+				emissions: todayTotal,
+				activities: todayEmissions.length,
+				categories: [...new Set(todayEmissions.map((e) => e.category))],
+			},
+			comparison: {
+				yesterdayEmissions: yesterdayTotal,
+				change: todayTotal - yesterdayTotal,
+				changePercentage:
+					yesterdayTotal > 0
+						? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
+						: 0,
+			},
+			goals: {
+				daily: goalComparisons.daily,
+				weekly: {
+					target: goalComparisons.weekly.target,
+					current: goalComparisons.weekly.actual,
+					percentage: goalComparisons.weekly.percentageOfTarget,
+					status: goalComparisons.weekly.status,
+					daysRemaining: goalComparisons.weekly.daysRemaining,
+				},
+			},
+			quickInsights: {
+				streak: calculateLoggingStreak(emissions, today),
+				priorityNotifications,
+				mood:
+					todayTotal < 5
+						? "excellent"
+						: todayTotal < 8
+						? "good"
+						: todayTotal < 12
+						? "moderate"
+						: "needs_attention",
+			},
+			generatedAt: new Date(),
+		};
+
+		res.json(dailySummary);
+	} catch (error) {
+		console.error("Error generating daily summary:", error);
+		res.status(500).json({
+			message: "Server error generating daily summary",
 		});
 	}
 });
