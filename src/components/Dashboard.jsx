@@ -148,6 +148,131 @@ export default function Dashboard() {
 			.slice(0, 10);
 	}, [emissions]);
 
+	// Enhanced welcome message data
+	const welcomeData = useMemo(() => {
+		const today = new Date();
+		const hour = today.getHours();
+
+		// Time-based greeting
+		let greeting = "Good morning";
+		let timeEmoji = "🌅";
+		if (hour >= 12 && hour < 17) {
+			greeting = "Good afternoon";
+			timeEmoji = "☀️";
+		} else if (hour >= 17) {
+			greeting = "Good evening";
+			timeEmoji = "🌆";
+		}
+
+		// User journey insights
+		let journeyMessage = "Ready to track your carbon footprint today?";
+		let journeyEmoji = "🌱";
+		let mood = "neutral";
+
+		if (userAnalysis?.hasData) {
+			// Calculate user's progress
+			const thisWeek = userAnalysis.thisWeekEmissions || 0;
+			const avgDaily =
+				emissions.length > 0
+					? summaryStats.totalEmissions / emissions.length
+					: 0;
+
+			// Determine mood and message based on data
+			if (thisWeek < 20) {
+				// Low emissions week
+				mood = "excellent";
+				journeyMessage = `Fantastic! You're having a low-impact week with only ${thisWeek.toFixed(
+					1
+				)}kg CO₂ so far.`;
+				journeyEmoji = "🌟";
+			} else if (thisWeek < 35) {
+				// Moderate emissions
+				mood = "good";
+				journeyMessage = `You're doing well this week! ${thisWeek.toFixed(
+					1
+				)}kg CO₂ tracked so far.`;
+				journeyEmoji = "💚";
+			} else if (thisWeek < 50) {
+				// Higher emissions
+				mood = "attention";
+				journeyMessage = `This week's at ${thisWeek.toFixed(
+					1
+				)}kg CO₂. Consider some eco-friendly choices today.`;
+				journeyEmoji = "🌿";
+			} else {
+				// Very high emissions
+				mood = "concern";
+				journeyMessage = `High impact week (${thisWeek.toFixed(
+					1
+				)}kg CO₂). Let's find ways to reduce today!`;
+				journeyEmoji = "⚡";
+			}
+
+			// Special messages for achievements or streaks
+			if (insights?.achievements?.length > 0) {
+				const recentAchievement = insights.achievements[0];
+				if (recentAchievement.category === "consistency") {
+					journeyMessage = `${recentAchievement.title} Keep up your tracking momentum!`;
+					journeyEmoji = "🔥";
+					mood = "celebration";
+				}
+			}
+
+			// Special message for new users
+			if (summaryStats.totalActivities <= 5) {
+				journeyMessage = `Great start! You've logged ${summaryStats.totalActivities} activities. Every entry helps!`;
+				journeyEmoji = "🚀";
+				mood = "encouraging";
+			}
+		} else {
+			// First-time user
+			journeyMessage =
+				"Welcome to your sustainability journey! Start by tracking your first activity.";
+			journeyEmoji = "🌱";
+			mood = "welcome";
+		}
+
+		// Current day insights
+		const todayActivities = emissions.filter((e) => {
+			const emissionDate = new Date(e.timestamp);
+			return emissionDate.toDateString() === today.toDateString();
+		});
+
+		const todayTotal = todayActivities.reduce((sum, e) => sum + e.value, 0);
+		const hasLoggedToday = todayActivities.length > 0;
+
+		return {
+			greeting,
+			timeEmoji,
+			journeyMessage,
+			journeyEmoji,
+			mood,
+			todayTotal,
+			hasLoggedToday,
+			todayActivities: todayActivities.length,
+		};
+	}, [userAnalysis, summaryStats, emissions, insights]);
+
+	// Daily tip generator
+	const getDailyTip = () => {
+		const tips = [
+			"🚶 Try walking or cycling for trips under 2 miles today",
+			"🌱 Consider a plant-based meal for lunch or dinner",
+			"💡 Unplug devices you're not using to save energy",
+			"♻️ Bring a reusable water bottle instead of buying plastic",
+			"🚌 Use public transport for one trip today",
+			"🌡️ Adjust your thermostat by 2 degrees to save energy",
+			"📱 Reduce screen time by 30 minutes today",
+			"🥗 Try to reduce food waste at your next meal",
+			"🚗 Combine multiple errands into one efficient trip",
+			"🛒 Choose items with minimal packaging when shopping",
+		];
+
+		const today = new Date();
+		const tipIndex = today.getDate() % tips.length;
+		return tips[tipIndex];
+	};
+
 	if (loading) {
 		return (
 			<>
@@ -167,13 +292,198 @@ export default function Dashboard() {
 		<>
 			<NavBar />
 			<div className="container mx-auto px-4 mt-[120px]">
+				{/* Enhanced Welcome Section */}
 				<div className="mb-8">
-					<h1 className="text-4xl italic font-semibold mb-2">
-						Welcome back, {user?.name}!
-					</h1>
-					<p className="text-gray-600 text-lg">
-						Here's your carbon footprint overview
-					</p>
+					<div
+						className={`bg-gradient-to-r rounded-2xl p-6 mb-6 shadow-[5px_5px_0px_1px_rgba(0,0,0,15)] outline-1 ${
+							welcomeData.mood === "excellent"
+								? "from-green-100 to-emerald-100"
+								: welcomeData.mood === "good"
+								? "from-blue-100 to-cyan-100"
+								: welcomeData.mood === "celebration"
+								? "from-purple-100 to-pink-100"
+								: welcomeData.mood === "encouraging"
+								? "from-yellow-100 to-orange-100"
+								: welcomeData.mood === "attention"
+								? "from-orange-100 to-yellow-100"
+								: welcomeData.mood === "concern"
+								? "from-red-100 to-orange-100"
+								: welcomeData.mood === "welcome"
+								? "from-green-50 to-blue-50"
+								: "from-gray-50 to-gray-100"
+						}`}
+					>
+						<div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+							<div className="flex-1 mb-4 md:mb-0">
+								<div className="flex items-center mb-2">
+									<span className="text-2xl mr-3">
+										{welcomeData.timeEmoji}
+									</span>
+									<h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+										{welcomeData.greeting}, {user?.name}!
+									</h1>
+								</div>
+								<div className="flex items-center text-lg text-gray-700 mb-2">
+									<span className="text-xl mr-2">
+										{welcomeData.journeyEmoji}
+									</span>
+									<p>{welcomeData.journeyMessage}</p>
+								</div>
+
+								{/* Today's Quick Stats */}
+								<div className="flex flex-wrap gap-4 mt-3 text-sm">
+									{welcomeData.hasLoggedToday ? (
+										<>
+											<div className="flex items-center bg-white bg-opacity-60 px-3 py-1 rounded-full">
+												<span className="text-green-600 font-semibold">
+													✓ Today:
+												</span>
+												<span className="ml-1 font-medium">
+													{welcomeData.todayTotal.toFixed(
+														1
+													)}
+													kg CO₂
+												</span>
+											</div>
+											<div className="flex items-center bg-white bg-opacity-60 px-3 py-1 rounded-full">
+												<span className="text-blue-600 font-semibold">
+													📊 Activities:
+												</span>
+												<span className="ml-1 font-medium">
+													{
+														welcomeData.todayActivities
+													}
+												</span>
+											</div>
+										</>
+									) : (
+										<div className="flex items-center bg-white bg-opacity-60 px-3 py-1 rounded-full">
+											<span className="text-orange-600 font-semibold">
+												📝 No activities logged today
+											</span>
+										</div>
+									)}
+
+									{userAnalysis?.topCategory && (
+										<div className="flex items-center bg-white bg-opacity-60 px-3 py-1 rounded-full">
+											<span className="text-purple-600 font-semibold">
+												🏆 Top:
+											</span>
+											<span className="ml-1 font-medium">
+												{userAnalysis.topCategory}
+											</span>
+										</div>
+									)}
+								</div>
+							</div>
+
+							{/* Quick Action or Insight */}
+							<div className="flex flex-col items-end space-y-2">
+								{!welcomeData.hasLoggedToday ? (
+									<Link
+										to="/track"
+										className="bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-800 transition-colors font-medium text-sm"
+									>
+										Track Today's Activities
+									</Link>
+								) : (
+									<Link
+										to="/track"
+										className="bg-white bg-opacity-80 text-gray-800 px-4 py-2 rounded-xl hover:bg-opacity-100 transition-colors font-medium text-sm"
+									>
+										Add More Activities
+									</Link>
+								)}
+
+								{/* Priority insight or notification */}
+								{insights?.notifications &&
+									insights.notifications.filter(
+										(n) => n.priority === "high"
+									).length > 0 && (
+										<div className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+											{
+												insights.notifications.filter(
+													(n) => n.priority === "high"
+												).length
+											}{" "}
+											urgent alert
+											{insights.notifications.filter(
+												(n) => n.priority === "high"
+											).length > 1
+												? "s"
+												: ""}
+										</div>
+									)}
+
+								{/* Achievement notification */}
+								{insights?.achievements &&
+									insights.achievements.length > 0 &&
+									!insights?.notifications?.filter(
+										(n) => n.priority === "high"
+									).length && (
+										<div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
+											{insights.achievements.length} new
+											achievement
+											{insights.achievements.length > 1
+												? "s"
+												: ""}
+											!
+										</div>
+									)}
+
+								{/* Quick tip for engaged users */}
+								{!insights?.achievements?.length &&
+									!insights?.notifications?.filter(
+										(n) => n.priority === "high"
+									).length && (
+										<div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium max-w-xs text-center">
+											{userAnalysis?.hasData
+												? getDailyTip()
+												: "💡 Check insights below for tips"}
+										</div>
+									)}
+							</div>
+						</div>
+
+						{/* Weekly Progress Bar */}
+						{userAnalysis?.hasData && (
+							<div className="mt-4 pt-4 border-t border-white border-opacity-40">
+								<div className="flex justify-between items-center mb-2">
+									<span className="text-sm font-medium text-gray-700">
+										This Week's Progress
+									</span>
+									<span className="text-xs text-gray-600">
+										{userAnalysis.thisWeekEmissions?.toFixed(
+											1
+										) || "0.0"}{" "}
+										/ 35.0 kg CO₂ (weekly target)
+									</span>
+								</div>
+								<div className="w-full bg-white bg-opacity-40 rounded-full h-2">
+									<div
+										className={`h-2 rounded-full transition-all duration-500 ${
+											(userAnalysis.thisWeekEmissions ||
+												0) <= 25
+												? "bg-green-500"
+												: (userAnalysis.thisWeekEmissions ||
+														0) <= 35
+												? "bg-yellow-500"
+												: "bg-red-500"
+										}`}
+										style={{
+											width: `${Math.min(
+												((userAnalysis.thisWeekEmissions ||
+													0) /
+													35) *
+													100,
+												100
+											)}%`,
+										}}
+									></div>
+								</div>
+							</div>
+						)}
+					</div>
 				</div>
 
 				{/* Summary Cards */}
