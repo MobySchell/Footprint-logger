@@ -1139,13 +1139,8 @@ export default function Dashboard() {
 							</div>
 						</Link>
 
-						<button
-							onClick={() => {
-								// Placeholder for future analytics page
-								alert(
-									"Detailed analytics coming soon! Check your insights above for now."
-								);
-							}}
+						<Link
+							to="/analytics"
 							className="flex items-center justify-center p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors w-full"
 						>
 							<div className="text-center">
@@ -1157,7 +1152,7 @@ export default function Dashboard() {
 									See detailed charts
 								</div>
 							</div>
-						</button>
+						</Link>
 
 						<div className="flex items-center justify-center p-4 bg-yellow-100 rounded-xl">
 							<div className="text-center">
