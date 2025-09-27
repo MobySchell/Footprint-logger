@@ -1,6 +1,17 @@
 import express from "express";
 import { ObjectId } from "mongodb";
 import { authenticateToken } from "./auth.js";
+import {
+	analysisCache,
+	calculateQuickStats,
+	calculateWeeklyComparison,
+	performanceMonitor,
+	formatAnalysisResponse,
+	formatErrorResponse,
+	validateAnalysisRequest,
+	analysisRateLimiter,
+	withErrorHandling,
+} from "../utils/backendHelpers.js";
 
 const router = express.Router();
 
@@ -1819,12 +1830,54 @@ router.get("/insights/:userId", authenticateToken, async (req, res) => {
 	try {
 		const { userId } = req.params;
 
+		// Validate request
+		const validation = validateAnalysisRequest(req);
+		if (!validation.isValid) {
+			return res
+				.status(400)
+				.json(
+					formatErrorResponse(
+						new Error(validation.errors.join(", ")),
+						400
+					)
+				);
+		}
+
+		// Rate limiting
+		if (!analysisRateLimiter.isAllowed(userId)) {
+			return res
+				.status(429)
+				.json(
+					formatErrorResponse(
+						new Error("Too many requests. Please try again later."),
+						429
+					)
+				);
+		}
+
 		// Ensure user can only access their own insights
 		if (userId !== req.user.id.toString()) {
-			return res.status(403).json({
-				message: "Cannot access another user's insights",
-			});
+			return res
+				.status(403)
+				.json(
+					formatErrorResponse(
+						new Error("Cannot access another user's insights"),
+						403
+					)
+				);
 		}
+
+		// Check cache first
+		const cacheKey = analysisCache.get(userId, "insights");
+		if (cacheKey) {
+			return res.json(
+				formatAnalysisResponse(cacheKey, { fromCache: true })
+			);
+		}
+
+		// Start performance monitoring
+		const operationId = `insights-${userId}-${Date.now()}`;
+		performanceMonitor.start(operationId);
 
 		// Fetch user's emissions
 		const emissions = await req.db
@@ -1883,12 +1936,20 @@ router.get("/insights/:userId", authenticateToken, async (req, res) => {
 			generatedAt: new Date(),
 		};
 
-		res.json({ insights });
+		// Cache the results
+		analysisCache.set(userId, "insights", {}, insights);
+
+		// Log performance
+		performanceMonitor.log(operationId, {
+			userId,
+			emissionsCount: emissions.length,
+			insightsGenerated: true,
+		});
+
+		res.json(formatAnalysisResponse(insights));
 	} catch (error) {
 		console.error("Error generating insights:", error);
-		res.status(500).json({
-			message: "Server error generating insights",
-		});
+		res.status(500).json(formatErrorResponse(error, 500));
 	}
 });
 
@@ -2234,6 +2295,106 @@ router.get("/daily-summary/:userId", authenticateToken, async (req, res) => {
 			message: "Server error generating daily summary",
 		});
 	}
+});
+
+// Quick stats endpoint using optimized aggregation
+router.get(
+	"/quick-stats/:userId",
+	authenticateToken,
+	withErrorHandling(async (req, res) => {
+		const { userId } = req.params;
+
+		// Validate request
+		const validation = validateAnalysisRequest(req);
+		if (!validation.isValid) {
+			return res
+				.status(400)
+				.json(
+					formatErrorResponse(
+						new Error(validation.errors.join(", ")),
+						400
+					)
+				);
+		}
+
+		// Ensure user can only access their own stats
+		if (userId !== req.user.id.toString()) {
+			return res
+				.status(403)
+				.json(
+					formatErrorResponse(
+						new Error("Cannot access another user's statistics"),
+						403
+					)
+				);
+		}
+
+		// Check cache
+		const cached = analysisCache.get(userId, "quick-stats");
+		if (cached) {
+			return res.json(
+				formatAnalysisResponse(cached, { fromCache: true })
+			);
+		}
+
+		// Calculate stats using optimized function
+		const stats = await calculateQuickStats(req.db, userId);
+
+		// Add weekly comparison
+		const weeklyComparison = await calculateWeeklyComparison(
+			req.db,
+			userId
+		);
+
+		const response = {
+			...stats,
+			weeklyComparison,
+		};
+
+		// Cache the results for shorter time (2 minutes)
+		analysisCache.set(userId, "quick-stats", {}, response);
+
+		res.json(formatAnalysisResponse(response));
+	})
+);
+
+// Weekly comparison endpoint
+router.get(
+	"/weekly-comparison/:userId",
+	authenticateToken,
+	withErrorHandling(async (req, res) => {
+		const { userId } = req.params;
+
+		// Ensure user can only access their own comparison
+		if (userId !== req.user.id.toString()) {
+			return res
+				.status(403)
+				.json(
+					formatErrorResponse(
+						new Error("Cannot access another user's comparison"),
+						403
+					)
+				);
+		}
+
+		const comparison = await calculateWeeklyComparison(req.db, userId);
+		res.json(formatAnalysisResponse(comparison));
+	})
+);
+
+// Health check endpoint for the analysis service
+router.get("/health", (req, res) => {
+	res.json({
+		status: "healthy",
+		timestamp: new Date(),
+		cache: {
+			size: analysisCache.cache.size,
+			enabled: true,
+		},
+		rateLimiter: {
+			enabled: true,
+		},
+	});
 });
 
 export default router;
