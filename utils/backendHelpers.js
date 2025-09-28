@@ -215,6 +215,7 @@ export const analysisCache = new AnalysisCache();
  */
 export const calculateQuickStats = async (db, userId) => {
 	try {
+		// Simple aggregation to get user's emission statistics
 		const pipeline = [
 			{ $match: { userId: new ObjectId(userId) } },
 			{
@@ -247,6 +248,8 @@ export const calculateQuickStats = async (db, userId) => {
 		}
 
 		const stats = result[0];
+
+		// Calculate how many days the user has been tracking
 		const trackingDays =
 			stats.firstActivity && stats.lastActivity
 				? Math.ceil(
@@ -274,6 +277,8 @@ export const calculateQuickStats = async (db, userId) => {
 export const calculateWeeklyComparison = async (db, userId) => {
 	try {
 		const now = new Date();
+
+		// Get current week (last 7 days) and previous week (7-14 days ago)
 		const currentWeekStart = new Date(
 			now.getTime() - 7 * 24 * 60 * 60 * 1000
 		);
@@ -281,6 +286,7 @@ export const calculateWeeklyComparison = async (db, userId) => {
 			now.getTime() - 14 * 24 * 60 * 60 * 1000
 		);
 
+		// Simple aggregation to compare this week vs last week
 		const pipeline = [
 			{
 				$match: {
@@ -304,7 +310,6 @@ export const calculateWeeklyComparison = async (db, userId) => {
 					_id: "$week",
 					totalEmissions: { $sum: "$value" },
 					activityCount: { $sum: 1 },
-					avgEmission: { $avg: "$value" },
 				},
 			},
 		];
@@ -314,6 +319,7 @@ export const calculateWeeklyComparison = async (db, userId) => {
 			.aggregate(pipeline)
 			.toArray();
 
+		// Get current and previous week data
 		const current = results.find((r) => r._id === "current") || {
 			totalEmissions: 0,
 			activityCount: 0,
@@ -323,6 +329,7 @@ export const calculateWeeklyComparison = async (db, userId) => {
 			activityCount: 0,
 		};
 
+		// Calculate percentage change
 		const changePercent =
 			previous.totalEmissions > 0
 				? ((current.totalEmissions - previous.totalEmissions) /
@@ -330,16 +337,16 @@ export const calculateWeeklyComparison = async (db, userId) => {
 				  100
 				: 0;
 
+		// Determine trend based on change
+		let trend = "stable";
+		if (changePercent > 5) trend = "increasing";
+		if (changePercent < -5) trend = "decreasing";
+
 		return {
 			current: current.totalEmissions,
 			previous: previous.totalEmissions,
 			changePercent,
-			trend:
-				changePercent > 5
-					? "increasing"
-					: changePercent < -5
-					? "decreasing"
-					: "stable",
+			trend,
 			currentActivities: current.activityCount,
 			previousActivities: previous.activityCount,
 		};
@@ -587,11 +594,13 @@ export const processBatch = async (items, processor, batchSize = 100) => {
 };
 
 /**
- * Database connection helpers
+ * Simple database setup - create basic indexes for better performance
  */
 export const ensureIndexes = async (db) => {
 	try {
-		// Create indexes for better query performance
+		console.log("🔧 Creating database indexes...");
+
+		// Create simple indexes for common queries
 		await db
 			.collection("emissions")
 			.createIndex({ userId: 1, timestamp: -1 });
@@ -600,9 +609,17 @@ export const ensureIndexes = async (db) => {
 			.createIndex({ userId: 1, category: 1 });
 		await db.collection("emissions").createIndex({ timestamp: -1 });
 		await db.collection("emissions").createIndex({ value: -1 });
+		await db
+			.collection("users")
+			.createIndex({ email: 1 }, { unique: true });
 
-		console.log("Database indexes created successfully");
+		console.log("✅ Database indexes created successfully");
 	} catch (error) {
-		console.error("Error creating database indexes:", error);
+		// Don't worry if indexes already exist
+		if (error.message.includes("already exists")) {
+			console.log("📋 Database indexes already exist");
+		} else {
+			console.error("❌ Error creating indexes:", error.message);
+		}
 	}
 };

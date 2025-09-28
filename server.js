@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import authRoutes from "./routes/auth.js";
 import emissionsRoutes from "./routes/emissions.js";
 import analysisRoutes from "./routes/analysis.js";
+import { ensureIndexes } from "./utils/backendHelpers.js";
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,9 @@ const connectDB = async () => {
 		await client.connect();
 		db = client.db();
 		console.log("Connected to MongoDB");
+
+		// Create database indexes for better performance
+		await ensureIndexes(db);
 	} catch (error) {
 		console.error("MongoDB connection error:", error);
 		process.exit(1);
