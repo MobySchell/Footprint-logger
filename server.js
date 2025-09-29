@@ -109,14 +109,15 @@ const connectDB = async () => {
 					socketTimeoutMS: 45000, // 45 second socket timeout
 				};
 
-				// Add SSL options for Atlas connections
+				// Add options for Atlas connections (modern driver doesn't need explicit SSL for mongodb+srv)
 				if (
 					uri.includes("mongodb+srv://") ||
 					(uri.includes("@") && uri.includes(".mongodb.net"))
 				) {
-					options.ssl = true;
-					options.sslValidate = true;
+					// For mongodb+srv, TLS is handled automatically by the driver
+					// Just ensure we have proper timeouts and retry logic
 					options.retryWrites = true;
+					options.w = "majority";
 				}
 
 				const client = new MongoClient(uri, options);
