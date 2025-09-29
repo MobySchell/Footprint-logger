@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Basic security headers (helmet removed to fix deployment issue)
+// Basic security headers (no CSP for API-only server)
 app.use((req, res, next) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
@@ -120,6 +120,11 @@ app.get("/api/health", (req, res) => {
 		database: dbConnected ? "connected" : "disconnected",
 		timestamp: new Date(),
 	});
+});
+
+// Handle favicon requests (prevents 404 errors)
+app.get("/favicon.ico", (req, res) => {
+	res.status(204).end(); // No Content
 });
 
 // Serve React Frontend (removed for API-only deployment)
