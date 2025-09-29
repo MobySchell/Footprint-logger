@@ -14,11 +14,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Basic security headers (no CSP for API-only server)
+// Basic security headers with explicit CSP override
 app.use((req, res, next) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
 	res.setHeader("X-XSS-Protection", "1; mode=block");
+
+	// Remove any existing CSP headers
+	res.removeHeader("Content-Security-Policy");
+	res.removeHeader("Content-Security-Policy-Report-Only");
+
 	next();
 });
 
@@ -49,6 +54,13 @@ app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Credentials", "true");
 	res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
 	res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+	// Additional headers to override platform CSP
+	res.header("X-Content-Security-Policy", "");
+	res.header("X-WebKit-CSP", "");
+	res.removeHeader("Content-Security-Policy");
+	res.removeHeader("Content-Security-Policy-Report-Only");
+
 	next();
 });
 
@@ -124,7 +136,23 @@ app.get("/api/health", (req, res) => {
 
 // Handle favicon requests (prevents 404 errors)
 app.get("/favicon.ico", (req, res) => {
+	// Log the request for debugging
+	console.log("Favicon request received from:", req.get("User-Agent"));
+
+	// Remove any CSP headers for favicon
+	res.removeHeader("Content-Security-Policy");
+	res.removeHeader("Content-Security-Policy-Report-Only");
+
 	res.status(204).end(); // No Content
+});
+
+// Debug route to check headers
+app.get("/debug-headers", (req, res) => {
+	res.json({
+		headers: res.getHeaders(),
+		csp: res.getHeader("Content-Security-Policy"),
+		timestamp: new Date(),
+	});
 });
 
 // Serve React Frontend (removed for API-only deployment)
