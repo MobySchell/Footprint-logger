@@ -6,8 +6,7 @@ import authRoutes from "./routes/auth.js";
 import emissionsRoutes from "./routes/emissions.js";
 import analysisRoutes from "./routes/analysis.js";
 import { ensureIndexes } from "./utils/backendHelpers.js";
-import path from "path";
-import helmet from "helmet";
+// Path imports removed - API-only deployment
 
 // Load environment variables
 dotenv.config();
@@ -15,25 +14,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Content Security Policy
-app.use(
-	helmet.contentSecurityPolicy({
-		useDefaults: false, // fully control CSP
-		directives: {
-			defaultSrc: ["'none'"], // block everything by default
-			scriptSrc: ["'self'"], // allow React JS
-			styleSrc: ["'self'"], // allow CSS
-			imgSrc: ["'self'", "https://footprint-logger-0yry.onrender.com"], // allow images/favicons
-			connectSrc: [
-				"'self'",
-				"https://footprint-logger-0yry.onrender.com",
-			], // allow API calls
-			fontSrc: ["'self'"],
-			objectSrc: ["'none'"],
-			baseUri: ["'self'"],
-		},
-	})
-);
+// Basic security headers (helmet removed to fix deployment issue)
+app.use((req, res, next) => {
+	res.setHeader("X-Content-Type-Options", "nosniff");
+	res.setHeader("X-Frame-Options", "DENY");
+	res.setHeader("X-XSS-Protection", "1; mode=block");
+	next();
+});
 
 // CORS Setup
 app.use(
@@ -135,13 +122,8 @@ app.get("/api/health", (req, res) => {
 	});
 });
 
-// Serve React Frontend
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "client/build")));
-
-app.get("*", (req, res) => {
-	res.sendFile(path.join(__dirname, "client/build", "index.html"));
-});
+// Serve React Frontend (removed for API-only deployment)
+// API-only server - no static file serving needed for Render deployment
 
 // Start Server
 const startServer = async () => {
