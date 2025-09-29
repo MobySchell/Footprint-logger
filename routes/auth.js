@@ -61,6 +61,15 @@ const generateToken = (userId) => {
 // Register route - matches Register.jsx form fields
 router.post("/register", async (req, res) => {
 	try {
+		// Check if database is connected
+		if (!req.dbConnected || !req.db) {
+			return res.status(503).json({
+				message:
+					"Database not available. Please install and start MongoDB.",
+				error: "Database connection required for registration",
+			});
+		}
+
 		const { name, surname, email, password } = req.body;
 
 		// Validation to match Register.jsx frontend validation
@@ -132,6 +141,15 @@ router.post("/register", async (req, res) => {
 // Login route - matches Login.jsx form fields
 router.post("/login", async (req, res) => {
 	try {
+		// Check if database is connected
+		if (!req.dbConnected || !req.db) {
+			return res.status(503).json({
+				message:
+					"Database not available. Please install and start MongoDB.",
+				error: "Database connection required for login",
+			});
+		}
+
 		const { email, password } = req.body;
 
 		// Validation to match Login.jsx frontend validation

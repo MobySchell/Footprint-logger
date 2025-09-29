@@ -163,7 +163,7 @@ export default function Analytics() {
 		return (
 			<>
 				<NavBar />
-				<div className="container mx-auto px-4 mt-[120px]">
+				<div className="container mx-auto px-4 mt-[120px] mb-12">
 					<div className="text-center py-12">
 						<div className="text-2xl font-semibold mb-4">
 							Loading Analytics...
@@ -181,7 +181,7 @@ export default function Analytics() {
 		return (
 			<>
 				<NavBar />
-				<div className="container mx-auto px-4 mt-[120px]">
+				<div className="container mx-auto px-4 mt-[120px] mb-12">
 					<div className="text-center py-12">
 						<div className="text-6xl mb-4">📊</div>
 						<h1 className="text-3xl font-bold mb-4">
@@ -206,7 +206,7 @@ export default function Analytics() {
 	return (
 		<>
 			<NavBar />
-			<div className="container mx-auto px-4 mt-[120px]">
+			<div className="container mx-auto px-4 mt-[120px] mb-12">
 				{/* Header */}
 				<div className="mb-8">
 					<h1 className="text-4xl font-bold mb-2">

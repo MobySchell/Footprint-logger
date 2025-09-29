@@ -291,7 +291,7 @@ export default function Dashboard() {
 	return (
 		<>
 			<NavBar />
-			<div className="container mx-auto px-4 mt-[120px]">
+			<div className="container mx-auto px-4 mt-[120px] mb-12">
 				{/* Enhanced Welcome Section */}
 				<div className="mb-8">
 					<div
