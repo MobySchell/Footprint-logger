@@ -38,7 +38,6 @@ app.use(
 				"http://localhost:5173",
 				"http://localhost:3000",
 				"https://footprint-logger-0yry.onrender.com", // your deployed frontend
-				"--host",
 			];
 
 			if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -189,8 +188,10 @@ app.get("/debug-headers", (req, res) => {
 // Start Server
 const startServer = async () => {
 	await connectDB();
-	app.listen(PORT, () => {
-		console.log(`Server running on port ${PORT}`);
+	app.listen(PORT, "0.0.0.0", () => {
+		console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
+		console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+		console.log(`Database: ${dbConnected ? "connected" : "disconnected"}`);
 	});
 };
 
