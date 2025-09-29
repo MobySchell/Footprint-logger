@@ -79,9 +79,11 @@ let dbConnected = false;
 
 const connectDB = async () => {
 	try {
-		// Prioritize Atlas connection and remove local fallbacks for production
+		// Try multiple Atlas connection approaches and local fallbacks
 		const connectionStrings = [
 			process.env.MONGODB_URI,
+			// Try simplified Atlas connection string without some parameters
+			process.env.MONGODB_URI?.split('?')[0] + '?retryWrites=true&w=majority',
 			// Only try local connections in development
 			...(process.env.NODE_ENV !== "production"
 				? [
@@ -89,7 +91,7 @@ const connectDB = async () => {
 						"mongodb://localhost:27017/footprint-logger",
 				  ]
 				: []),
-		].filter(Boolean);
+		].filter(Boolean).filter((uri, index, arr) => arr.indexOf(uri) === index); // Remove duplicates
 
 		let connected = false;
 
@@ -102,23 +104,17 @@ const connectDB = async () => {
 					)}`
 				); // Hide credentials in logs
 
-				// Configure MongoDB client options
+				// Minimal MongoDB client options for Atlas
 				const options = {
-					serverSelectionTimeoutMS: 5000, // 5 second timeout
-					connectTimeoutMS: 10000, // 10 second connection timeout
-					socketTimeoutMS: 45000, // 45 second socket timeout
+					serverSelectionTimeoutMS: 10000, // 10 second timeout
+					connectTimeoutMS: 30000, // 30 second connection timeout
+					maxPoolSize: 10, // Maintain up to 10 socket connections
+					serverApi: {
+						version: '1',
+						strict: true,
+						deprecationErrors: true,
+					}
 				};
-
-				// Add options for Atlas connections (modern driver doesn't need explicit SSL for mongodb+srv)
-				if (
-					uri.includes("mongodb+srv://") ||
-					(uri.includes("@") && uri.includes(".mongodb.net"))
-				) {
-					// For mongodb+srv, TLS is handled automatically by the driver
-					// Just ensure we have proper timeouts and retry logic
-					options.retryWrites = true;
-					options.w = "majority";
-				}
 
 				const client = new MongoClient(uri, options);
 				await client.connect();
@@ -133,6 +129,15 @@ const connectDB = async () => {
 				break;
 			} catch (err) {
 				console.log(`❌ Failed to connect: ${err.message}`);
+				// Log additional error details for SSL issues
+				if (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('ssl')) {
+					console.log(`🔍 SSL Error Details: This might be a MongoDB Atlas cluster issue`);
+					console.log(`💡 Possible solutions:`);
+					console.log(`   - Check if your Atlas cluster is active and not paused`);
+					console.log(`   - Verify Network Access settings in Atlas (allow 0.0.0.0/0)`);
+					console.log(`   - Try restarting the Atlas cluster`);
+					console.log(`   - Check if cluster is on a supported MongoDB version`);
+				}
 			}
 		}
 
