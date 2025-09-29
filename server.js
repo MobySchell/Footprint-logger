@@ -39,20 +39,20 @@ app.use(
 app.use(
 	cors({
 		origin: function (origin, callback) {
+			// allow requests with no origin (curl, Postman)
 			if (!origin) return callback(null, true);
+
 			const allowedOrigins = [
 				"http://localhost:5173",
 				"http://localhost:3000",
+				"https://footprint-logger-0yry.onrender.com", // your deployed frontend
 			];
-			if (allowedOrigins.indexOf(origin) !== -1)
-				return callback(null, true);
+
+			if (allowedOrigins.includes(origin)) return callback(null, true);
+
 			return callback(new Error("Not allowed by CORS"));
 		},
 		credentials: true,
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
-		optionsSuccessStatus: 200,
-		preflightContinue: false,
 	})
 );
 
