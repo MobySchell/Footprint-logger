@@ -38,6 +38,7 @@ app.use(
 				"http://localhost:5173",
 				"http://localhost:3000",
 				"https://footprint-logger-0yry.onrender.com", // your deployed frontend
+				"--host",
 			];
 
 			if (allowedOrigins.includes(origin)) return callback(null, true);
