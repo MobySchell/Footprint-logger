@@ -33,7 +33,7 @@ export const emissionFactors = {
 };
 
 /**
- * Calculate basic statistics for an array of numbers
+ * Calculate simple statistics for an array of numbers
  */
 export const calculateStats = (values) => {
 	if (!values || values.length === 0) {
@@ -43,12 +43,11 @@ export const calculateStats = (values) => {
 			average: 0,
 			min: 0,
 			max: 0,
-			median: 0,
 		};
 	}
 
-	const sortedValues = [...values].sort((a, b) => a - b);
 	const sum = values.reduce((total, val) => total + val, 0);
+	const sortedValues = [...values].sort((a, b) => a - b);
 
 	return {
 		count: values.length,
@@ -56,43 +55,11 @@ export const calculateStats = (values) => {
 		average: sum / values.length,
 		min: sortedValues[0],
 		max: sortedValues[sortedValues.length - 1],
-		median: calculateMedian(sortedValues),
-		standardDeviation: calculateStandardDeviation(
-			values,
-			sum / values.length
-		),
 	};
 };
 
 /**
- * Calculate median value from a sorted array
- */
-export const calculateMedian = (sortedArray) => {
-	if (sortedArray.length === 0) return 0;
-
-	const mid = Math.floor(sortedArray.length / 2);
-
-	if (sortedArray.length % 2 === 0) {
-		return (sortedArray[mid - 1] + sortedArray[mid]) / 2;
-	} else {
-		return sortedArray[mid];
-	}
-};
-
-/**
- * Calculate standard deviation
- */
-export const calculateStandardDeviation = (values, mean) => {
-	if (values.length === 0) return 0;
-
-	const variance =
-		values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
-		values.length;
-	return Math.sqrt(variance);
-};
-
-/**
- * Calculate percentage change between two values
+ * Simple percentage change calculation
  */
 export const calculatePercentageChange = (newValue, oldValue) => {
 	if (oldValue === 0) return newValue > 0 ? 100 : 0;
@@ -254,76 +221,33 @@ export const getTopCategories = (emissions, limit = 5) => {
 };
 
 /**
- * Calculate moving average
+ * Simple trend detection - compare first half vs second half of data
  */
-export const calculateMovingAverage = (values, windowSize = 7) => {
-	if (values.length < windowSize) return values;
-
-	const movingAverages = [];
-
-	for (let i = windowSize - 1; i < values.length; i++) {
-		const window = values.slice(i - windowSize + 1, i + 1);
-		const average = window.reduce((sum, val) => sum + val, 0) / windowSize;
-		movingAverages.push(average);
-	}
-
-	return movingAverages;
-};
-
-/**
- * Detect trends in emission data
- */
-export const detectTrend = (values, minDataPoints = 3) => {
-	if (values.length < minDataPoints) {
+export const detectTrend = (values) => {
+	if (values.length < 4) {
 		return {
 			trend: "insufficient_data",
-			confidence: 0,
-			message: `Need at least ${minDataPoints} data points for trend analysis`,
+			message: "Need at least 4 data points for trend analysis",
 		};
 	}
 
-	// Calculate linear regression slope
-	const n = values.length;
-	const sumX = (n * (n + 1)) / 2; // Sum of indices 1, 2, 3, ..., n
-	const sumY = values.reduce((sum, val) => sum + val, 0);
-	const sumXY = values.reduce(
-		(sum, val, index) => sum + val * (index + 1),
-		0
-	);
-	const sumX2 = (n * (n + 1) * (2 * n + 1)) / 6; // Sum of squares of indices
+	// Split data in half and compare averages
+	const midPoint = Math.floor(values.length / 2);
+	const firstHalf = values.slice(0, midPoint);
+	const secondHalf = values.slice(midPoint);
 
-	const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-	const intercept = (sumY - slope * sumX) / n;
+	const firstAverage =
+		firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
+	const secondAverage =
+		secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
 
-	// Calculate correlation coefficient for confidence
-	const meanX = sumX / n;
-	const meanY = sumY / n;
+	const change = secondAverage - firstAverage;
+	const percentChange = (change / firstAverage) * 100;
 
-	const numerator = values.reduce(
-		(sum, val, index) => sum + (index + 1 - meanX) * (val - meanY),
-		0
-	);
-	const denominatorX = Math.sqrt(
-		values.reduce(
-			(sum, val, index) => sum + Math.pow(index + 1 - meanX, 2),
-			0
-		)
-	);
-	const denominatorY = Math.sqrt(
-		values.reduce((sum, val) => sum + Math.pow(val - meanY, 2), 0)
-	);
-
-	const correlation =
-		denominatorX * denominatorY > 0
-			? numerator / (denominatorX * denominatorY)
-			: 0;
-	const confidence = Math.abs(correlation) * 100;
-
-	// Determine trend direction
 	let trend;
-	if (Math.abs(slope) < 0.1) {
+	if (Math.abs(percentChange) < 5) {
 		trend = "stable";
-	} else if (slope > 0) {
+	} else if (change > 0) {
 		trend = "increasing";
 	} else {
 		trend = "decreasing";
@@ -331,63 +255,48 @@ export const detectTrend = (values, minDataPoints = 3) => {
 
 	return {
 		trend,
-		slope,
-		intercept,
-		correlation,
-		confidence,
-		message: getTrendMessage(trend, confidence),
+		change,
+		percentChange: Math.abs(percentChange),
+		message: getSimpleTrendMessage(trend, Math.abs(percentChange)),
 	};
 };
 
 /**
- * Get human-readable trend message
+ * Get simple trend message
  */
-const getTrendMessage = (trend, confidence) => {
-	const confidenceLevel =
-		confidence > 80 ? "strong" : confidence > 60 ? "moderate" : "weak";
-
+const getSimpleTrendMessage = (trend, percentChange) => {
 	switch (trend) {
 		case "increasing":
-			return `${confidenceLevel} upward trend - emissions are increasing`;
+			return `Emissions increased by ${percentChange.toFixed(1)}%`;
 		case "decreasing":
-			return `${confidenceLevel} downward trend - emissions are decreasing`;
+			return `Emissions decreased by ${percentChange.toFixed(1)}%`;
 		case "stable":
-			return `${confidenceLevel} stable trend - emissions are relatively constant`;
+			return "Emissions remained relatively stable";
 		default:
-			return "Insufficient data for trend analysis";
+			return "Not enough data for analysis";
 	}
 };
 
 /**
- * Calculate carbon footprint score (0-100 scale)
+ * Simple carbon footprint score (0-100 scale)
  */
 export const calculateCarbonScore = (userEmissions, globalAverage = 35) => {
-	// Global average weekly emissions in kg CO₂
 	if (userEmissions <= 0) return 100;
 
-	// Score is inversely related to emissions
-	// Score of 100 = 0 emissions
-	// Score of 50 = global average
-	// Score decreases as emissions increase
-
+	// Simple scoring: lower emissions = higher score
 	const ratio = userEmissions / globalAverage;
-	let score;
 
 	if (ratio <= 0.5) {
-		// Excellent performance
-		score = 100 - ratio * 20; // 100 to 90
+		return 90; // Excellent
 	} else if (ratio <= 1.0) {
-		// Good to average performance
-		score = 90 - (ratio - 0.5) * 80; // 90 to 50
+		return 70; // Good
+	} else if (ratio <= 1.5) {
+		return 50; // Average
 	} else if (ratio <= 2.0) {
-		// Below average performance
-		score = 50 - (ratio - 1.0) * 30; // 50 to 20
+		return 30; // Below average
 	} else {
-		// Poor performance
-		score = Math.max(0, 20 - (ratio - 2.0) * 10); // 20 to 0
+		return 10; // Poor
 	}
-
-	return Math.round(Math.max(0, Math.min(100, score)));
 };
 
 /**
@@ -513,81 +422,42 @@ export const formatEmissionValue = (value) => {
 };
 
 /**
- * Calculate time until goal achievement
+ * Simple goal progress calculation
  */
-export const calculateGoalProgress = (
-	currentEmissions,
-	targetEmissions,
-	trend
-) => {
-	if (trend.trend === "increasing" || trend.slope >= 0) {
+export const calculateGoalProgress = (currentEmissions, targetEmissions) => {
+	if (currentEmissions <= targetEmissions) {
 		return {
-			achievable: false,
-			message: "Current trend is not leading toward goal achievement",
-			recommendation:
-				"Consider implementing more aggressive reduction strategies",
-		};
-	}
-
-	const reductionRate = Math.abs(trend.slope);
-	const remainingReduction = currentEmissions - targetEmissions;
-
-	if (remainingReduction <= 0) {
-		return {
-			achievable: true,
 			achieved: true,
-			message: "Goal already achieved!",
+			progress: 100,
+			message: "Goal achieved!",
 		};
 	}
 
-	const weeksToGoal = Math.ceil(remainingReduction / reductionRate);
+	const progress = (targetEmissions / currentEmissions) * 100;
+	const remaining = currentEmissions - targetEmissions;
 
 	return {
-		achievable: true,
 		achieved: false,
-		weeksToGoal,
-		message: `At current rate, goal will be achieved in approximately ${weeksToGoal} weeks`,
-		currentRate: reductionRate,
-		remainingReduction,
+		progress: Math.round(progress),
+		remaining: Math.round(remaining * 10) / 10,
+		message: `${Math.round(remaining * 10) / 10} kg CO₂ to reduce`,
 	};
 };
 
 /**
- * Validate emission data
+ * Simple validation for emission data
  */
 export const validateEmissionData = (emission) => {
 	const errors = [];
 
-	if (!emission.category) {
-		errors.push("Category is required");
-	}
+	// Check required fields
+	if (!emission.category) errors.push("Category is required");
+	if (!emission.value) errors.push("Value is required");
+	if (!emission.timestamp) errors.push("Date is required");
 
-	if (typeof emission.value !== "number" || emission.value < 0) {
+	// Check value is a positive number
+	if (emission.value && (isNaN(emission.value) || emission.value < 0)) {
 		errors.push("Value must be a positive number");
-	}
-
-	if (emission.value > 1000) {
-		errors.push("Value seems unusually high - please verify");
-	}
-
-	if (!emission.timestamp) {
-		errors.push("Timestamp is required");
-	}
-
-	const emissionDate = new Date(emission.timestamp);
-	const now = new Date();
-	const oneYearAgo = new Date(
-		now.getFullYear() - 1,
-		now.getMonth(),
-		now.getDate()
-	);
-
-	if (emissionDate > now) {
-		errors.push("Emission date cannot be in the future");
-	}
-
-	if (emissionDate < oneYearAgo) {
-		errors.push("Emission date is more than one year old");
 	}
 
 	return {
@@ -597,53 +467,35 @@ export const validateEmissionData = (emission) => {
 };
 
 /**
- * Generate achievement milestones
+ * Simple achievement system
  */
 export const generateAchievementMilestones = (userStats) => {
 	const milestones = [];
 
-	// Total activities milestones
-	const activityMilestones = [10, 25, 50, 100, 250, 500, 1000];
-	activityMilestones.forEach((milestone) => {
-		if (userStats.totalActivities >= milestone) {
-			milestones.push({
-				type: "activity_count",
-				milestone,
-				achieved: true,
-				title: `${milestone} Activities Tracked`,
-				description: `You've logged ${milestone} activities!`,
-			});
-		} else if (userStats.totalActivities >= milestone * 0.8) {
-			milestones.push({
-				type: "activity_count",
-				milestone,
-				achieved: false,
-				progress: (userStats.totalActivities / milestone) * 100,
-				title: `${milestone} Activities`,
-				description: `${
-					milestone - userStats.totalActivities
-				} activities to go!`,
-			});
-		}
-	});
+	// Activity milestones (simpler list)
+	const targets = [5, 10, 25, 50, 100];
 
-	// Reduction milestones
-	if (userStats.improvementPercent > 0) {
-		const reductionMilestones = [5, 10, 20, 30, 50];
-		reductionMilestones.forEach((reduction) => {
-			if (userStats.improvementPercent >= reduction) {
-				milestones.push({
-					type: "reduction",
-					milestone: reduction,
-					achieved: true,
-					title: `${reduction}% Reduction Achieved`,
-					description: `You've reduced emissions by ${userStats.improvementPercent.toFixed(
-						1
-					)}%!`,
-				});
-			}
-		});
+	for (const target of targets) {
+		if (userStats.totalActivities >= target) {
+			milestones.push({
+				type: "activity",
+				achieved: true,
+				title: `${target} Activities Tracked`,
+				description: `Great job logging ${target} activities!`,
+			});
+		} else {
+			// Show next milestone to reach
+			milestones.push({
+				type: "activity",
+				achieved: false,
+				title: `${target} Activities`,
+				description: `${
+					target - userStats.totalActivities
+				} more to go!`,
+			});
+			break; // Only show the next one to achieve
+		}
 	}
 
-	return milestones.slice(0, 10); // Return top 10 milestones
+	return milestones;
 };

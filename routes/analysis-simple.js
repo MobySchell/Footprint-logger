@@ -30,16 +30,22 @@ const getWeeklyTrend = (emissions) => {
 		currentWeek: thisWeekTotal,
 		previousWeek: lastWeekTotal,
 		change: thisWeekTotal - lastWeekTotal,
-		trend: thisWeekTotal > lastWeekTotal ? "increasing" : thisWeekTotal < lastWeekTotal ? "decreasing" : "stable",
+		trend:
+			thisWeekTotal > lastWeekTotal
+				? "increasing"
+				: thisWeekTotal < lastWeekTotal
+				? "decreasing"
+				: "stable",
 	};
 };
 
 // Simple helper to get top categories
 const getTopCategories = (emissions) => {
 	const categoryTotals = {};
-	
+
 	emissions.forEach((e) => {
-		categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.value;
+		categoryTotals[e.category] =
+			(categoryTotals[e.category] || 0) + e.value;
 	});
 
 	return Object.entries(categoryTotals)
@@ -51,7 +57,8 @@ const getTopCategories = (emissions) => {
 // Simple recommendations based on top category
 const getSimpleRecommendations = (topCategory) => {
 	const recommendations = {
-		transport: "Try using public transport, walking, or biking for short trips",
+		transport:
+			"Try using public transport, walking, or biking for short trips",
 		food: "Consider eating less meat and more local, seasonal foods",
 		energy: "Turn off lights when not needed and use energy-efficient appliances",
 		housing: "Reduce water usage and recycle more",
@@ -60,9 +67,11 @@ const getSimpleRecommendations = (topCategory) => {
 	return [
 		{
 			category: topCategory,
-			suggestion: recommendations[topCategory] || "Look for ways to reduce emissions in this category",
-			priority: "high"
-		}
+			suggestion:
+				recommendations[topCategory] ||
+				"Look for ways to reduce emissions in this category",
+			priority: "high",
+		},
 	];
 };
 
@@ -152,17 +161,18 @@ router.get("/recommendations/:userId", authenticateToken, async (req, res) => {
 		if (emissions.length === 0) {
 			return res.json({
 				recommendations: {
-					message: "Start tracking activities to get recommendations!",
+					message:
+						"Start tracking activities to get recommendations!",
 					hasData: false,
 				},
 			});
 		}
 
 		const topCategories = getTopCategories(emissions);
-		const recommendations = topCategories.map(cat => ({
+		const recommendations = topCategories.map((cat) => ({
 			category: cat.category,
 			suggestion: getSimpleRecommendations(cat.category)[0].suggestion,
-			emissions: cat.total
+			emissions: cat.total,
 		}));
 
 		res.json({ recommendations });
@@ -193,7 +203,10 @@ router.get("/quick-stats/:userId", authenticateToken, async (req, res) => {
 
 		// Get basic stats
 		const stats = await calculateQuickStats(req.db, userId);
-		const weeklyComparison = await calculateWeeklyComparison(req.db, userId);
+		const weeklyComparison = await calculateWeeklyComparison(
+			req.db,
+			userId
+		);
 
 		const response = {
 			...stats,
@@ -213,25 +226,29 @@ router.get("/quick-stats/:userId", authenticateToken, async (req, res) => {
 });
 
 // Weekly comparison endpoint
-router.get("/weekly-comparison/:userId", authenticateToken, async (req, res) => {
-	try {
-		const { userId } = req.params;
+router.get(
+	"/weekly-comparison/:userId",
+	authenticateToken,
+	async (req, res) => {
+		try {
+			const { userId } = req.params;
 
-		if (userId !== req.user.id.toString()) {
-			return res.status(403).json({
-				message: "Cannot access another user's comparison",
+			if (userId !== req.user.id.toString()) {
+				return res.status(403).json({
+					message: "Cannot access another user's comparison",
+				});
+			}
+
+			const comparison = await calculateWeeklyComparison(req.db, userId);
+			res.json(comparison);
+		} catch (error) {
+			console.error("Error getting weekly comparison:", error);
+			res.status(500).json({
+				message: "Server error getting comparison",
 			});
 		}
-
-		const comparison = await calculateWeeklyComparison(req.db, userId);
-		res.json(comparison);
-	} catch (error) {
-		console.error("Error getting weekly comparison:", error);
-		res.status(500).json({
-			message: "Server error getting comparison",
-		});
 	}
-});
+);
 
 // Simple health check
 router.get("/health", (req, res) => {

@@ -151,56 +151,52 @@ export const getDailyTrendsAggregationPipeline = (userId, days = 90) => {
 };
 
 /**
- * Cache management for expensive calculations
+ * Simple cache for storing analysis results
  */
 export class AnalysisCache {
 	constructor() {
 		this.cache = new Map();
-		this.ttl = 5 * 60 * 1000; // 5 minutes TTL
+		this.ttl = 5 * 60 * 1000; // 5 minutes
 	}
 
-	generateKey(userId, type, params = {}) {
-		const paramString = JSON.stringify(params);
-		return `${userId}-${type}-${paramString}`;
+	// Create a simple cache key
+	generateKey(userId, type) {
+		return `${userId}-${type}`;
 	}
 
-	get(userId, type, params) {
-		const key = this.generateKey(userId, type, params);
+	// Get cached data if it's still fresh
+	get(userId, type) {
+		const key = this.generateKey(userId, type);
 		const cached = this.cache.get(key);
 
 		if (cached && Date.now() - cached.timestamp < this.ttl) {
 			return cached.data;
 		}
 
+		// Remove expired data
 		this.cache.delete(key);
 		return null;
 	}
 
+	// Store data with timestamp
 	set(userId, type, params, data) {
-		const key = this.generateKey(userId, type, params);
+		const key = this.generateKey(userId, type);
 		this.cache.set(key, {
 			data,
 			timestamp: Date.now(),
 		});
 
-		// Clean up old entries periodically
-		if (this.cache.size > 1000) {
-			this.cleanup();
+		// Keep cache size manageable
+		if (this.cache.size > 100) {
+			this.clearOldEntries();
 		}
 	}
 
-	cleanup() {
+	// Remove old entries
+	clearOldEntries() {
 		const now = Date.now();
 		for (const [key, value] of this.cache.entries()) {
 			if (now - value.timestamp > this.ttl) {
-				this.cache.delete(key);
-			}
-		}
-	}
-
-	clear(userId) {
-		for (const key of this.cache.keys()) {
-			if (key.startsWith(userId)) {
 				this.cache.delete(key);
 			}
 		}
