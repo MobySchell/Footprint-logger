@@ -125,6 +125,22 @@ app.use("/api/auth", authRoutes);
 app.use("/api/emissions", emissionsRoutes);
 app.use("/api/analysis", analysisRoutes);
 
+// Root route for direct browser access
+app.get("/", (req, res) => {
+	res.json({
+		message: "Carbon Footprint Logger API",
+		status: "running",
+		database: dbConnected ? "connected" : "disconnected",
+		endpoints: {
+			health: "/api/health",
+			auth: "/api/auth/*",
+			emissions: "/api/emissions/*",
+			analysis: "/api/analysis/*",
+		},
+		timestamp: new Date(),
+	});
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
 	res.json({
@@ -134,16 +150,27 @@ app.get("/api/health", (req, res) => {
 	});
 });
 
-// Handle favicon requests (prevents 404 errors)
+// Handle favicon requests (prevents CSP errors)
 app.get("/favicon.ico", (req, res) => {
-	// Log the request for debugging
 	console.log("Favicon request received from:", req.get("User-Agent"));
 
-	// Remove any CSP headers for favicon
+	// Remove ALL security headers that might cause CSP issues
 	res.removeHeader("Content-Security-Policy");
 	res.removeHeader("Content-Security-Policy-Report-Only");
+	res.removeHeader("X-Content-Security-Policy");
+	res.removeHeader("X-WebKit-CSP");
 
-	res.status(204).end(); // No Content
+	// Set basic headers
+	res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+	res.setHeader("Content-Type", "image/x-icon");
+
+	// Return a simple 1x1 transparent icon (base64 encoded)
+	const transparentIcon = Buffer.from(
+		"AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAA=",
+		"base64"
+	);
+
+	res.send(transparentIcon);
 });
 
 // Debug route to check headers
