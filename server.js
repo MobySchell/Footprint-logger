@@ -79,28 +79,59 @@ let dbConnected = false;
 
 const connectDB = async () => {
 	try {
+		// Prioritize Atlas connection and remove local fallbacks for production
 		const connectionStrings = [
 			process.env.MONGODB_URI,
-			"mongodb://127.0.0.1:27017/footprint-logger",
-			"mongodb://localhost:27017/footprint-logger",
+			// Only try local connections in development
+			...(process.env.NODE_ENV !== "production"
+				? [
+						"mongodb://127.0.0.1:27017/footprint-logger",
+						"mongodb://localhost:27017/footprint-logger",
+				  ]
+				: []),
 		].filter(Boolean);
 
 		let connected = false;
 
 		for (const uri of connectionStrings) {
 			try {
-				console.log(`🔄 Trying to connect to: ${uri}`);
-				const client = new MongoClient(uri, {
-					serverSelectionTimeoutMS: 3000,
-				});
+				console.log(
+					`🔄 Trying to connect to: ${uri.replace(
+						/\/\/[^:]+:[^@]+@/,
+						"//*****:*****@"
+					)}`
+				); // Hide credentials in logs
+
+				// Configure MongoDB client options
+				const options = {
+					serverSelectionTimeoutMS: 5000, // 5 second timeout
+					connectTimeoutMS: 10000, // 10 second connection timeout
+					socketTimeoutMS: 45000, // 45 second socket timeout
+				};
+
+				// Add SSL options for Atlas connections
+				if (
+					uri.includes("mongodb+srv://") ||
+					(uri.includes("@") && uri.includes(".mongodb.net"))
+				) {
+					options.ssl = true;
+					options.sslValidate = true;
+					options.retryWrites = true;
+				}
+
+				const client = new MongoClient(uri, options);
 				await client.connect();
+
+				// Test the connection
+				await client.db().admin().ping();
+
 				db = client.db();
 				dbConnected = true;
 				connected = true;
-				console.log("✅ Connected to MongoDB");
+				console.log("✅ Connected to MongoDB successfully");
 				break;
 			} catch (err) {
-				console.log(`❌ Failed to connect to ${uri}: ${err.message}`);
+				console.log(`❌ Failed to connect: ${err.message}`);
 			}
 		}
 
