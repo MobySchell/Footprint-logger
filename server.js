@@ -1,12 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { MongoClient } from "mongodb";
 import authRoutes from "./routes/auth.js";
 import emissionsRoutes from "./routes/emissions.js";
 import analysisRoutes from "./routes/analysis.js";
 import { ensureIndexes } from "./utils/backendHelpers.js";
-// Path imports removed - API-only deployment
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -177,21 +182,42 @@ app.use("/api/auth", authRoutes);
 app.use("/api/emissions", emissionsRoutes);
 app.use("/api/analysis", analysisRoutes);
 
-// Root route for direct browser access
-app.get("/", (req, res) => {
-	res.json({
-		message: "Carbon Footprint Logger API",
-		status: "running",
-		database: dbConnected ? "connected" : "disconnected",
-		endpoints: {
-			health: "/api/health",
-			auth: "/api/auth/*",
-			emissions: "/api/emissions/*",
-			analysis: "/api/analysis/*",
-		},
-		timestamp: new Date(),
+// Serve static files from React build (production)
+if (process.env.NODE_ENV === "production") {
+	// Serve static files from the React app build directory
+	app.use(express.static(path.join(__dirname, "dist")));
+
+	// Handle React routing - send all non-API requests to React app
+	app.get("*", (req, res) => {
+		// Skip API routes and specific endpoints
+		if (
+			req.path.startsWith("/api/") ||
+			req.path === "/favicon.ico" ||
+			req.path === "/debug-headers"
+		) {
+			return res.status(404).json({ message: "API endpoint not found" });
+		}
+
+		res.sendFile(path.join(__dirname, "dist", "index.html"));
 	});
-});
+} else {
+	// Development mode - show API info
+	app.get("/", (req, res) => {
+		res.json({
+			message: "Carbon Footprint Logger API (Development)",
+			status: "running",
+			database: dbConnected ? "connected" : "disconnected",
+			frontend: "Run 'npm run dev' for frontend development server",
+			endpoints: {
+				health: "/api/health",
+				auth: "/api/auth/*",
+				emissions: "/api/emissions/*",
+				analysis: "/api/analysis/*",
+			},
+			timestamp: new Date(),
+		});
+	});
+}
 
 // Health check
 app.get("/api/health", (req, res) => {
