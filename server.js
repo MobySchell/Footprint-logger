@@ -188,7 +188,7 @@ if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "dist")));
 
 	// Handle React routing - send all non-API requests to React app
-	app.get("*", (req, res) => {
+	app.get("/*", (req, res) => {
 		// Skip API routes and specific endpoints
 		if (
 			req.path.startsWith("/api/") ||
