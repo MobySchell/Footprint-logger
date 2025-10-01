@@ -97,31 +97,6 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Global error handler for CORS and other errors
-app.use((err, req, res) => {
-	console.error("Server Error:", err);
-
-	// Ensure CORS headers are always set, even on errors
-	res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-	res.header("Access-Control-Allow-Credentials", "true");
-	res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-	res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-
-	if (err.message === "Not allowed by CORS") {
-		return res
-			.status(403)
-			.json({ message: "CORS Error: Origin not allowed" });
-	}
-
-	res.status(500).json({
-		message: "Internal Server Error",
-		error:
-			process.env.NODE_ENV === "development"
-				? err.message
-				: "Something went wrong",
-	});
-});
-
 // MongoDB Connection
 let db;
 let dbConnected = false;
