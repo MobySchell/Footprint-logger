@@ -43,11 +43,18 @@ app.use(
 				"http://localhost:5173",
 				"http://localhost:3000",
 				"https://footprint-logger-0yry.onrender.com", // your deployed frontend
+				"https://footprint-logger-1.onrender.com", // your backend URL (for testing)
+				"https://footprint-logger-frontend.onrender.com", // alternative frontend URL
 			];
+
+			// Log the origin for debugging
+			console.log("CORS Origin check:", origin);
 
 			if (allowedOrigins.includes(origin)) return callback(null, true);
 
-			return callback(new Error("Not allowed by CORS"));
+			// For debugging, temporarily allow all origins
+			console.log("CORS: Allowing origin for debugging:", origin);
+			return callback(null, true);
 		},
 		credentials: true,
 	})
@@ -76,6 +83,31 @@ app.use(express.json());
 app.use((req, res, next) => {
 	console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
 	next();
+});
+
+// Global error handler for CORS and other errors
+app.use((err, req, res) => {
+	console.error("Server Error:", err);
+
+	// Ensure CORS headers are always set, even on errors
+	res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+	res.header("Access-Control-Allow-Credentials", "true");
+	res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+	res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+	if (err.message === "Not allowed by CORS") {
+		return res
+			.status(403)
+			.json({ message: "CORS Error: Origin not allowed" });
+	}
+
+	res.status(500).json({
+		message: "Internal Server Error",
+		error:
+			process.env.NODE_ENV === "development"
+				? err.message
+				: "Something went wrong",
+	});
 });
 
 // MongoDB Connection
@@ -221,9 +253,21 @@ if (process.env.NODE_ENV === "production") {
 
 // Health check
 app.get("/api/health", (req, res) => {
+	console.log("Health check requested from:", req.headers.origin);
 	res.json({
 		message: "Server is running!",
 		database: dbConnected ? "connected" : "disconnected",
+		timestamp: new Date(),
+		origin: req.headers.origin,
+	});
+});
+
+// Simple test endpoint for CORS debugging
+app.get("/api/test", (req, res) => {
+	console.log("Test endpoint hit from:", req.headers.origin);
+	res.json({
+		message: "CORS test successful!",
+		origin: req.headers.origin,
 		timestamp: new Date(),
 	});
 });

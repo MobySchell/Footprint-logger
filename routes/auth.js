@@ -61,8 +61,13 @@ const generateToken = (userId) => {
 // Register route - matches Register.jsx form fields
 router.post("/register", async (req, res) => {
 	try {
+		console.log("Register request received from:", req.headers.origin);
+		console.log("Database connected:", req.dbConnected);
+		console.log("Database object exists:", !!req.db);
+
 		// Check if database is connected
 		if (!req.dbConnected || !req.db) {
+			console.log("Database not available for registration");
 			return res.status(503).json({
 				message:
 					"Database not available. Please install and start MongoDB.",

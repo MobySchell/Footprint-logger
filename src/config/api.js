@@ -5,7 +5,7 @@ const API_BASE_URL =
 	import.meta.env.VITE_API_URL ||
 	(import.meta.env.DEV
 		? "http://localhost:5000/api"
-		: "https://footprint-logger-0yry.onrender.com/api");
+		: "https://footprint-logger-1.onrender.com/api");
 
 export { API_BASE_URL };
 
