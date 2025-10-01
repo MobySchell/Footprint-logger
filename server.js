@@ -19,15 +19,53 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Basic security headers with explicit CSP override
+// Handle favicon requests early to avoid CSP issues
+app.get("/favicon.ico", (req, res) => {
+	console.log("Favicon request received from:", req.get("User-Agent"));
+
+	// Aggressively remove ALL CSP headers that might be set by Render
+	res.removeHeader("Content-Security-Policy");
+	res.removeHeader("Content-Security-Policy-Report-Only");
+	res.removeHeader("X-Content-Security-Policy");
+	res.removeHeader("X-WebKit-CSP");
+
+	// Set a very permissive CSP to override any platform restrictions
+	res.setHeader(
+		"Content-Security-Policy",
+		"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; font-src * data:; connect-src *; media-src * data: blob:; object-src *; base-uri *; form-action *; frame-ancestors *"
+	);
+
+	// Set basic headers
+	res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+	res.setHeader("Content-Type", "image/x-icon");
+
+	// Return a simple 1x1 transparent icon (base64 encoded)
+	const transparentIcon = Buffer.from(
+		"AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAA=",
+		"base64"
+	);
+
+	res.send(transparentIcon);
+});
+
+// Basic security headers with permissive CSP
 app.use((req, res, next) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
 	res.setHeader("X-XSS-Protection", "1; mode=block");
 
-	// Remove any existing CSP headers
+	// Aggressively remove any existing CSP headers first
 	res.removeHeader("Content-Security-Policy");
 	res.removeHeader("Content-Security-Policy-Report-Only");
+	res.removeHeader("X-Content-Security-Policy");
+	res.removeHeader("X-WebKit-CSP");
+
+	// Set a very permissive CSP policy to override any platform restrictions
+	const cspPolicy =
+		"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; font-src * data:; connect-src *; media-src * data: blob:; object-src *; base-uri *; form-action *; frame-ancestors *";
+
+	res.setHeader("Content-Security-Policy", cspPolicy);
+	res.setHeader("Content-Security-Policy-Report-Only", cspPolicy);
 
 	next();
 });
@@ -217,7 +255,17 @@ app.use("/api/analysis", analysisRoutes);
 // Serve static files from React build (production)
 if (process.env.NODE_ENV === "production") {
 	// Serve static files from the React app build directory
-	app.use(express.static(path.join(__dirname, "dist")));
+	app.use(
+		express.static(path.join(__dirname, "dist"), {
+			setHeaders: (res) => {
+				// Override CSP for static files to be more permissive
+				res.setHeader(
+					"Content-Security-Policy",
+					"default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:; img-src 'self' data: blob: https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https:; connect-src 'self' https: http:; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+				);
+			},
+		})
+	);
 
 	// Handle React routing - send all non-API requests to React app
 	app.get("/*splat", (req, res) => {
@@ -272,28 +320,7 @@ app.get("/api/test", (req, res) => {
 	});
 });
 
-// Handle favicon requests (prevents CSP errors)
-app.get("/favicon.ico", (req, res) => {
-	console.log("Favicon request received from:", req.get("User-Agent"));
-
-	// Remove ALL security headers that might cause CSP issues
-	res.removeHeader("Content-Security-Policy");
-	res.removeHeader("Content-Security-Policy-Report-Only");
-	res.removeHeader("X-Content-Security-Policy");
-	res.removeHeader("X-WebKit-CSP");
-
-	// Set basic headers
-	res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
-	res.setHeader("Content-Type", "image/x-icon");
-
-	// Return a simple 1x1 transparent icon (base64 encoded)
-	const transparentIcon = Buffer.from(
-		"AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAA=",
-		"base64"
-	);
-
-	res.send(transparentIcon);
-});
+// Favicon route moved to top of file to avoid CSP issues
 
 // Debug route to check headers
 app.get("/debug-headers", (req, res) => {
