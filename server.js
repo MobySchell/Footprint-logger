@@ -23,20 +23,8 @@ const PORT = process.env.PORT || 5000;
 app.get("/favicon.ico", (req, res) => {
 	console.log("Favicon request received from:", req.get("User-Agent"));
 
-	// Aggressively remove ALL CSP headers that might be set by Render
-	res.removeHeader("Content-Security-Policy");
-	res.removeHeader("Content-Security-Policy-Report-Only");
-	res.removeHeader("X-Content-Security-Policy");
-	res.removeHeader("X-WebKit-CSP");
-
-	// Set a very permissive CSP to override any platform restrictions
-	res.setHeader(
-		"Content-Security-Policy",
-		"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; font-src * data:; connect-src *; media-src * data: blob:; object-src *; base-uri *; form-action *; frame-ancestors *"
-	);
-
-	// Set basic headers
-	res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+	// Set headers immediately
+	res.setHeader("Cache-Control", "public, max-age=86400");
 	res.setHeader("Content-Type", "image/x-icon");
 
 	// Return a simple 1x1 transparent icon (base64 encoded)
@@ -48,25 +36,11 @@ app.get("/favicon.ico", (req, res) => {
 	res.send(transparentIcon);
 });
 
-// Basic security headers with permissive CSP
+// Basic security headers
 app.use((req, res, next) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
 	res.setHeader("X-XSS-Protection", "1; mode=block");
-
-	// Aggressively remove any existing CSP headers first
-	res.removeHeader("Content-Security-Policy");
-	res.removeHeader("Content-Security-Policy-Report-Only");
-	res.removeHeader("X-Content-Security-Policy");
-	res.removeHeader("X-WebKit-CSP");
-
-	// Set a very permissive CSP policy to override any platform restrictions
-	const cspPolicy =
-		"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; font-src * data:; connect-src *; media-src * data: blob:; object-src *; base-uri *; form-action *; frame-ancestors *";
-
-	res.setHeader("Content-Security-Policy", cspPolicy);
-	res.setHeader("Content-Security-Policy-Report-Only", cspPolicy);
-
 	next();
 });
 
@@ -277,6 +251,9 @@ if (process.env.NODE_ENV === "production") {
 		) {
 			return res.status(404).json({ message: "API endpoint not found" });
 		}
+
+		// Set basic headers
+		res.setHeader("Content-Type", "text/html; charset=utf-8");
 
 		res.sendFile(path.join(__dirname, "dist", "index.html"));
 	});

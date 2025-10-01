@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<!-- Use data URL for favicon to avoid CSP issues -->
+		<link
+			rel="icon"
+			type="image/x-icon"
+			href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAA="
+		/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Carbon Footprint Logger</title>
+		<!-- Override platform CSP with permissive meta tag -->
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; font-src * data:; connect-src *; media-src * data: blob:; object-src *; base-uri *; form-action *; frame-ancestors *"
+		/>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.jsx"></script>
+	</body>
+</html>
