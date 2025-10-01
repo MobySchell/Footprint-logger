@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { API_ENDPOINTS } from "../config/api.js";
 
 export const AuthContext = createContext();
 
@@ -8,15 +9,13 @@ export const AuthProvider = ({ children }) => {
 	const [loading, setLoading] = useState(true);
 	const [userAnalysis, setUserAnalysis] = useState(null);
 
-	const API_BASE_URL = "http://localhost:5000/api";
-
 	// Function to fetch detailed analysis data
 	const fetchUserAnalysis = async () => {
 		if (!user?.id || !token) return;
 
 		try {
 			const response = await fetch(
-				`${API_BASE_URL}/analysis/insights/${user.id}`,
+				API_ENDPOINTS.ANALYSIS.getInsights(user.id),
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 		const checkAuth = async () => {
 			if (token) {
 				try {
-					const response = await fetch(`${API_BASE_URL}/auth/me`, {
+					const response = await fetch(API_ENDPOINTS.AUTH.ME, {
 						headers: {
 							Authorization: `Bearer ${token}`,
 						},
@@ -75,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		try {
-			const response = await fetch(`${API_BASE_URL}/auth/login`, {
+			const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -114,7 +113,7 @@ export const AuthProvider = ({ children }) => {
 
 	const register = async (name, surname, email, password) => {
 		try {
-			const response = await fetch(`${API_BASE_URL}/auth/register`, {
+			const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -144,7 +143,7 @@ export const AuthProvider = ({ children }) => {
 	const logout = async () => {
 		try {
 			if (token) {
-				await fetch(`${API_BASE_URL}/auth/logout`, {
+				await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
 					method: "POST",
 					headers: {
 						Authorization: `Bearer ${token}`,

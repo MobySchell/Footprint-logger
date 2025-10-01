@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import NavBar from "./NavBar";
 import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router";
+import { API_ENDPOINTS } from "../config/api.js";
 
 export default function Leaderboard() {
 	const [leaderboard, setLeaderboard] = useState([]);
@@ -13,7 +14,7 @@ export default function Leaderboard() {
 		const loadLeaderboard = async () => {
 			try {
 				const response = await fetch(
-					"http://localhost:5000/api/emissions/user-totals"
+					API_ENDPOINTS.EMISSIONS.USER_TOTALS
 				);
 
 				if (response.ok) {

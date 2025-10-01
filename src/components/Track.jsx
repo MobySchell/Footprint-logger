@@ -3,6 +3,7 @@ import NavBar from "./NavBar";
 import { useAuth } from "../hooks/useAuth";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
+import { API_ENDPOINTS } from "../config/api.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -120,7 +121,7 @@ export default function Track() {
 			if (user?.id) {
 				try {
 					const response = await fetch(
-						`http://localhost:5000/api/emissions/${user.id}`,
+						API_ENDPOINTS.EMISSIONS.getUserEmissions(user.id),
 						{
 							headers: {
 								Authorization: `Bearer ${localStorage.getItem(
@@ -185,7 +186,7 @@ export default function Track() {
 		// Save to database
 		if (user?.id) {
 			try {
-				await fetch("http://localhost:5000/api/emissions", {
+				await fetch(API_ENDPOINTS.EMISSIONS.BASE, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -227,7 +228,7 @@ export default function Track() {
 			if (user?.id) {
 				try {
 					await fetch(
-						`http://localhost:5000/api/emissions/${user.id}/all`,
+						API_ENDPOINTS.EMISSIONS.clearUserEmissions(user.id),
 						{
 							method: "DELETE",
 							headers: {

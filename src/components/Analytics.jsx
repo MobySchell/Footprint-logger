@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import NavBar from "./NavBar";
 import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router";
+import { API_ENDPOINTS } from "../config/api.js";
 
 export default function Analytics() {
 	const [emissions, setEmissions] = useState([]);
@@ -21,7 +22,7 @@ export default function Analytics() {
 
 				// Fetch emissions
 				const emissionsResponse = await fetch(
-					`http://localhost:5000/api/emissions/${user.id}`,
+					API_ENDPOINTS.EMISSIONS.getUserEmissions(user.id),
 					{
 						headers: {
 							Authorization: `Bearer ${localStorage.getItem(
@@ -38,7 +39,7 @@ export default function Analytics() {
 
 				// Fetch detailed insights
 				const insightsResponse = await fetch(
-					`http://localhost:5000/api/analysis/insights/${user.id}`,
+					API_ENDPOINTS.ANALYSIS.getInsights(user.id),
 					{
 						headers: {
 							Authorization: `Bearer ${localStorage.getItem(
@@ -55,7 +56,7 @@ export default function Analytics() {
 
 				// Fetch comparisons
 				const comparisonsResponse = await fetch(
-					`http://localhost:5000/api/analysis/comparisons/${user.id}`,
+					API_ENDPOINTS.ANALYSIS.getWeeklyComparison(user.id),
 					{
 						headers: {
 							Authorization: `Bearer ${localStorage.getItem(
